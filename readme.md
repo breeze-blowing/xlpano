@@ -1,3 +1,4 @@
 # XLPano 全景引擎
 
-## Todo List
+## 开发
+`npm run dev`
