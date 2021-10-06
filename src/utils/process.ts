@@ -28,3 +28,17 @@ export function initArrayBuffer(
   gl.vertexAttribPointer(a_attribute, size, type, false, 0, 0);
   gl.enableVertexAttribArray(a_attribute);
 }
+
+/**
+ * 加载图片
+ * @param {string} src 图片地址
+ * @return Promise<TexImageSource> 图像资源
+ * */
+export function loadImage(src: string): Promise<TexImageSource> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = error => reject(error);
+    image.src = src;
+  });
+}
