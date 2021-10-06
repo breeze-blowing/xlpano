@@ -92,6 +92,16 @@ export default class Scene {
     yaw = 0.0;
 
     /**
+     * @property {boolean} dragging 是否正在被拖拽
+     * 鼠标按下置为 true；鼠标释放置为 false
+     * */
+    dragging = false;
+    /**
+     * @property {{x: number, y: number}} dragStartPoint 开始拖拽的起点
+     * */
+    dragStartPoint = { x: 0, y: 0 };
+
+    /**
      * @constructor 构造函数
      * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
@@ -127,23 +137,27 @@ export default class Scene {
                 });
             };
 
-            document.onkeydown = ev => {
-                const step = 10.0;
-                switch (ev.code) {
-                    case 'ArrowUp':
-                        render(-step, 0);
-                        break;
-                    case 'ArrowDown':
-                        render(step, 0);
-                        break;
-                    case 'ArrowLeft':
-                        render(0, -step);
-                        break;
-                    case 'ArrowRight':
-                        render(0, step);
-                        break;
+            canvas.onmousedown = (ev) => {
+                this.dragging = true;
+                this.dragStartPoint = {
+                    x: ev.offsetX,
+                    y: ev.offsetY,
+                };
+            }
+            canvas.onmouseup = () => this.dragging = false;
+            canvas.onmouseout = () => this.dragging = false;
+            canvas.onmousemove = (ev) => {
+                if (this.dragging) {
+                    const ratio = 10;
+                    const deltaPitch = (this.dragStartPoint.y - ev.offsetY) / ratio;
+                    const deltaYaw = (this.dragStartPoint.x - ev.offsetX) / ratio;
+                    render(deltaPitch, deltaYaw);
+                    this.dragStartPoint = {
+                        x: ev.offsetX,
+                        y: ev.offsetY,
+                    };
                 }
-            };
+            }
 
             render(0.0, 0.0);
         });
@@ -169,24 +183,31 @@ export default class Scene {
             throw new Error('创建纹理对象失败');
         }
         let texUnit = gl.TEXTURE0;
+        let samplerPrefix = 'f';
         switch (unit) {
             case 0:
                 texUnit = gl.TEXTURE0;
+                samplerPrefix = 'f';
                 break;
             case 1:
                 texUnit = gl.TEXTURE1;
+                samplerPrefix = 'r';
                 break;
             case 2:
                 texUnit = gl.TEXTURE2;
+                samplerPrefix = 'u';
                 break;
             case 3:
                 texUnit = gl.TEXTURE3;
+                samplerPrefix = 'l';
                 break;
             case 4:
                 texUnit = gl.TEXTURE4;
+                samplerPrefix = 'd';
                 break;
             case 5:
                 texUnit = gl.TEXTURE5;
+                samplerPrefix = 'b';
                 break;
             default:
                 break;
@@ -196,29 +217,7 @@ export default class Scene {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-        let samplerPrefix = 'f';
-        switch (unit) {
-            case 0:
-                samplerPrefix = 'f';
-                break;
-            case 1:
-                samplerPrefix = 'r';
-                break;
-            case 2:
-                samplerPrefix = 'u';
-                break;
-            case 3:
-                samplerPrefix = 'l';
-                break;
-            case 4:
-                samplerPrefix = 'd';
-                break;
-            case 5:
-                samplerPrefix = 'b';
-                break;
-            default:
-                break;
-        }
+
         const u_Sampler = gl.getUniformLocation(gl.program, `${samplerPrefix}_Sampler`);
         if (!u_Sampler) {
             throw new Error(`获取 ${u_Sampler} 地址失败`);
