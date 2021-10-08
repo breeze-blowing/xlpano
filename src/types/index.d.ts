@@ -15,8 +15,16 @@ declare let WebGLDebugUtils: {
   makeDebugContext: (gl: WebGLRenderingContextWithProgram) => WebGLRenderingContextWithProgram,
 }
 
-/**
- * 以字符串的方式 import 着色器文件
- * */
 declare module '*.vert';
 declare module '*.frag';
+declare module '*.png';
+
+/**
+ * 内部层层传递的全局变量
+ * */
+interface PanoRenderParams {
+  gl: WebGLRenderingContextWithProgram,
+  canvas: HTMLCanvasElement,
+  container: HTMLElement,
+  switchScene: (index: number) => void,
+}

@@ -1,5 +1,6 @@
 import {initArrayBuffer, loadImage} from "../utils/process";
 import Matrix4 from "../utils/matrix";
+import HotSpot from "./hotSpot";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -62,122 +63,12 @@ export default class Scene {
     static u_Face?: WebGLUniformLocation;
 
     /**
-     * 获取 u_Face 缓存
-     * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
-     * @return {WebGLUniformLocation} u_Face 地址
-     * */
-    getUFaceLocation(gl: WebGLRenderingContextWithProgram): WebGLUniformLocation {
-        if (!Scene.u_Face) {
-            const u_Face = gl.getUniformLocation(gl.program, 'u_Face');
-            if (!u_Face) {
-                throw new Error('获取 u_Face 地址失败');
-            }
-            Scene.u_Face = u_Face;
-        }
-        return Scene.u_Face;
-    }
-
-    /**
-     * @property {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
-     * */
-    textures: string[] = [];
-
-    /**
-     * @property {number} pitch 俯仰角-绕 x 轴旋转角度
-     * */
-    pitch = 0.0;
-    /**
-     * @property {number} yaw 偏航角-绕 y 轴旋转角度
-     * */
-    yaw = 0.0;
-
-    /**
-     * @property {boolean} dragging 是否正在被拖拽
-     * 鼠标按下置为 true；鼠标释放置为 false
-     * */
-    dragging = false;
-    /**
-     * @property {{x: number, y: number}} dragStartPoint 开始拖拽的起点
-     * */
-    dragStartPoint = { x: 0, y: 0 };
-
-    /**
-     * @constructor 构造函数
-     * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
-     * */
-    constructor(textures: string[]) {
-        this.textures = textures;
-    }
-
-    /**
-     * 渲染到 pano
-     * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
-     * @param {HTMLCanvasElement} canvas canvas-dom
-     * */
-    render(gl: WebGLRenderingContextWithProgram, canvas: HTMLCanvasElement) {
-        initArrayBuffer(gl, Scene.vertices, 3, gl.FLOAT, 'a_Position');
-        initArrayBuffer(gl, Scene.texs, 2, gl.FLOAT, 'a_TexCoord');
-
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
-
-        this.loadTextures().then((images) => {
-            // [imgF, imgR, imgU, imgL, imgD, imgB]
-            images.forEach((img, index) => {
-                if (index <= 5) this.initTexture(gl, img, index as Unit);
-            });
-
-            const render = (deltaPitch: number, deltaYaw: number) => {
-                this.setMvpMatrix(gl, deltaPitch, deltaYaw);
-
-                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-                Scene.allFacesIndices.forEach((faceIndices, index) => {
-                    this.renderFace(gl, faceIndices, index as Unit);
-                });
-            };
-
-            canvas.onmousedown = (ev) => {
-                this.dragging = true;
-                this.dragStartPoint = {
-                    x: ev.offsetX,
-                    y: ev.offsetY,
-                };
-            }
-            canvas.onmouseup = () => this.dragging = false;
-            canvas.onmouseout = () => this.dragging = false;
-            canvas.onmousemove = (ev) => {
-                if (this.dragging) {
-                    const ratio = 10;
-                    const deltaPitch = (this.dragStartPoint.y - ev.offsetY) / ratio;
-                    const deltaYaw = (this.dragStartPoint.x - ev.offsetX) / ratio;
-                    render(deltaPitch, deltaYaw);
-                    this.dragStartPoint = {
-                        x: ev.offsetX,
-                        y: ev.offsetY,
-                    };
-                }
-            }
-
-            render(0.0, 0.0);
-        });
-    }
-
-    /**
-     * 加载纹理贴图
-     * @return {Promise<TexImageSource[]>} 图像资源
-     * */
-    loadTextures(): Promise<TexImageSource[]> {
-        return Promise.all(this.textures.map(texture => loadImage(texture)));
-    }
-
-    /**
      * 将每个面的纹理贴图赋值给每个面的 sampler
      * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
      * @param {TexImageSource} image 图像资源
      * @param {number} unit 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
      * */
-    initTexture(gl: WebGLRenderingContextWithProgram, image: TexImageSource, unit: Unit) {
+    static initTexture(gl: WebGLRenderingContextWithProgram, image: TexImageSource, unit: Unit) {
         const texture = gl.createTexture();
         if (!texture) {
             throw new Error('创建纹理对象失败');
@@ -226,12 +117,138 @@ export default class Scene {
     }
 
     /**
+     * 获取 u_Face 缓存
+     * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
+     * @return {WebGLUniformLocation} u_Face 地址
+     * */
+    getUFaceLocation(gl: WebGLRenderingContextWithProgram): WebGLUniformLocation {
+        if (!Scene.u_Face) {
+            const u_Face = gl.getUniformLocation(gl.program, 'u_Face');
+            if (!u_Face) {
+                throw new Error('获取 u_Face 地址失败');
+            }
+            Scene.u_Face = u_Face;
+        }
+        return Scene.u_Face;
+    }
+
+    /**
+     * @property {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
+     * */
+    textures: string[] = [];
+
+    /**
+     * @property {number} pitch 俯仰角-绕 x 轴旋转角度
+     * */
+    pitch = 0.0;
+    /**
+     * @property {number} yaw 偏航角-绕 y 轴旋转角度
+     * */
+    yaw = 0.0;
+
+    /**
+     * @property {boolean} dragging 是否正在被拖拽
+     * 鼠标按下置为 true；鼠标释放置为 false
+     * */
+    dragging = false;
+    /**
+     * @property {{x: number, y: number}} dragStartPoint 开始拖拽的起点
+     * */
+    dragStartPoint = { x: 0, y: 0 };
+
+    /**
+     * @property {HotSpot[]} hotSpots 热点
+     * */
+    hotSpots: HotSpot[] = [];
+
+    /**
+     * @constructor 构造函数
+     * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
+     * */
+    constructor(textures: string[]) {
+        this.textures = textures;
+    }
+
+    addHotSpots(hotSpots: HotSpot | HotSpot[]) {
+        if (hotSpots instanceof Array) {
+            this.hotSpots = this.hotSpots.concat(hotSpots);
+        } else {
+            this.hotSpots.push(hotSpots);
+        }
+    }
+
+    /**
+     * 渲染到 pano
+     * @param {PanoRenderParams} params 全局通用渲染参数
+     * */
+    render(params: PanoRenderParams) {
+        const { gl, canvas } = params;
+
+        initArrayBuffer(gl, Scene.vertices, 3, gl.FLOAT, 'a_Position');
+        initArrayBuffer(gl, Scene.texs, 2, gl.FLOAT, 'a_TexCoord');
+
+        this.loadTextures().then((images) => {
+            // [imgF, imgR, imgU, imgL, imgD, imgB]
+            images.forEach((img, index) => {
+                if (index <= 5) Scene.initTexture(gl, img, index as Unit);
+            });
+
+            const render = (deltaPitch: number, deltaYaw: number) => {
+                this.setMvpMatrix(gl, deltaPitch, deltaYaw);
+
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+                Scene.allFacesIndices.forEach((faceIndices, index) => {
+                    this.renderFace(gl, faceIndices, index as Unit);
+                });
+
+                // 渲染热点
+                if (this.hotSpots && this.hotSpots.length) {
+                    this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, params));
+                }
+            };
+
+            canvas.onmousedown = (ev) => {
+                this.dragging = true;
+                this.dragStartPoint = {
+                    x: ev.offsetX,
+                    y: ev.offsetY,
+                };
+            }
+            canvas.onmouseup = () => this.dragging = false;
+            canvas.onmouseout = () => this.dragging = false;
+            canvas.onmousemove = (ev) => {
+                if (this.dragging) {
+                    const ratio = 10;
+                    const deltaPitch = (this.dragStartPoint.y - ev.offsetY) / ratio;
+                    const deltaYaw = (this.dragStartPoint.x - ev.offsetX) / ratio;
+                    render(deltaPitch, deltaYaw);
+                    this.dragStartPoint = {
+                        x: ev.offsetX,
+                        y: ev.offsetY,
+                    };
+                }
+            }
+
+            render(0.0, 0.0);
+        });
+    }
+
+    /**
+     * 加载纹理贴图
+     * @return {Promise<TexImageSource[]>} 图像资源
+     * */
+    private loadTextures(): Promise<TexImageSource[]> {
+        return Promise.all(this.textures.map(texture => loadImage(texture)));
+    }
+
+    /**
      * 渲染立方体的其中一面
      * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
      * @param {Uint8Array} indices 该面的顶点索引
-     * @param {number} unit 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
+     * @param {Unit} unit 每个面的编号
      * */
-    renderFace(gl: WebGLRenderingContextWithProgram, indices: Uint8Array, unit: Unit) {
+    private renderFace(gl: WebGLRenderingContextWithProgram, indices: Uint8Array, unit: Unit) {
         const indexBuffer = gl.createBuffer();
         if (!indexBuffer) {
             throw new Error('创建索引缓冲区对象失败');
@@ -250,7 +267,7 @@ export default class Scene {
      * @param {number} deltaPitch 俯仰角偏移值
      * @param {number} deltaYaw 偏航角偏移值
      * */
-    setMvpMatrix(gl: WebGLRenderingContextWithProgram, deltaPitch: number, deltaYaw: number) {
+    private setMvpMatrix(gl: WebGLRenderingContextWithProgram, deltaPitch: number, deltaYaw: number) {
         const u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
         if (!u_MvpMatrix) {
             throw new Error('获取 mvp 矩阵地址失败');
@@ -275,5 +292,13 @@ export default class Scene {
         mvpMatrix.rotate(this.yaw, 0, 1, 0);
 
         gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    }
+
+    /**
+     * 销毁
+     * */
+    destroy() {
+        // 移除热点
+        if (this.hotSpots && this.addHotSpots.length) this.hotSpots.forEach(hotSpot => hotSpot.destroy());
     }
 }

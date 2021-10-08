@@ -21,7 +21,8 @@ module.exports = {
         rules: [
             { test: /\.tsx?$/, loader: "awesome-typescript-loader" },
             { enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
-            { test: /(\.vert$)|(\.frag$)/, use: 'raw-loader' }
+            { test: /(\.vert$)|(\.frag$)/, use: 'raw-loader' },
+            { test: /\.(png|svg|jpg|jpeg|gif)$/i, type: 'asset/resource' },
         ]
     },
 

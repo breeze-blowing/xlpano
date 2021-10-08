@@ -8,7 +8,12 @@ import Scene from './scene';
  * */
 export default class Pano {
   /**
-   * @property {HTMLCanvasElement} canvas canvas节点容器
+   * @property {HTMLElement} container 容器
+   * */
+  container: HTMLElement;
+
+  /**
+   * @property {HTMLCanvasElement} canvas canvas节点
    * */
   canvas: HTMLCanvasElement;
 
@@ -29,13 +34,26 @@ export default class Pano {
 
   /**
    * @constructor
-   * @param {HTMLCanvasElement} canvas canvas节点容器
+   * @param {string} containerId 容器节点id
    * @param {boolean} debug 是否开启debug
    * */
-  constructor(canvas: HTMLCanvasElement, debug?: boolean) {
-    if (!canvas) {
-      throw new Error('初始化 canvas 不能为空');
+  constructor(containerId: string, debug?: boolean) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+      throw new Error('找不到容器，请确认 id 是否正确');
     }
+    container.style.overflow = 'hidden';
+    // 如果 container 的 position 不是 absolute 和 fixed，则统一设置成 relative
+    const containerPosition = container.style.position;
+    if (containerPosition !== 'absolute' && containerPosition !== 'fixed') {
+      container.style.position = 'relative';
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+    container.append(canvas);
+
+    this.container = container;
     this.canvas = canvas;
     this.gl = getWebGLContext(canvas, debug);
     initShaders(this.gl, VertShader, FragShader);
@@ -43,9 +61,21 @@ export default class Pano {
 
   /**
    * 添加场景
+   * @param {Scene} scene 场景
    * */
   addScene(scene: Scene) {
     this.scenes.push(scene);
+  }
+
+  /**
+   * 切换场景
+   * @param {number} sceneIndex 切换后的场景
+   * */
+  switch = (sceneIndex: number) => {
+    const currentScene = this.scenes[this.sceneIndex];
+    if (currentScene) currentScene.destroy();
+    this.sceneIndex = sceneIndex;
+    this.render();
   }
 
   /**
@@ -56,6 +86,14 @@ export default class Pano {
     if (!currentScene) {
       throw new Error('当前场景不存在');
     }
-    currentScene.render(this.gl, this.canvas);
+    const gl = this.gl;
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+    currentScene.render({
+      gl,
+      canvas: this.canvas,
+      container: this.container,
+      switchScene: this.switch,
+    });
   }
 }
