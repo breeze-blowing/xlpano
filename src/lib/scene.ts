@@ -184,7 +184,27 @@ export default class Scene {
     render(params: PanoRenderParams) {
         const { gl, canvas } = params;
 
-        initArrayBuffer(gl, Scene.vertices, 3, gl.FLOAT, 'a_Position');
+        // 根据 canvas 的宽高比例，对坐标进行转换
+        const { width, height } = canvas;
+        let vertices: Float32Array = Float32Array.from(Scene.vertices);
+        if (width > height) {
+            const ratio = (width / height);
+            // 所有顶点的 y 坐标放大 ratio 倍
+            vertices = vertices.map((p, index) => {
+                if ((index - 1) % 3 === 0) p *= ratio;
+                return p;
+            })
+        }
+        if (width < height) {
+            const ratio = (height / width);
+            // 所有顶点的 x 坐标放大 ratio 倍
+            vertices = vertices.map((p, index) => {
+                if (index % 3 === 0) p *= ratio;
+                return p;
+            })
+        }
+
+        initArrayBuffer(gl, vertices, 3, gl.FLOAT, 'a_Position');
         initArrayBuffer(gl, Scene.texs, 2, gl.FLOAT, 'a_TexCoord');
 
         this.loadTextures().then((images) => {
@@ -274,7 +294,7 @@ export default class Scene {
         }
 
         const mvpMatrix = new Matrix4();
-        mvpMatrix.setPerspective(90, 1, 0.1, 2.0);
+        mvpMatrix.setPerspective(90, 1, 0.1, 10.0);
 
         mvpMatrix.lookAt(0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0, 1, 0);
 
