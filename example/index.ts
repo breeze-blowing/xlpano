@@ -13,9 +13,12 @@ function main() {
     './assets/d.jpg',
     './assets/b.jpg',
   ]);
-  const s1HotSpot1 = new HotSpot(60,0, 1);
-  const s1HotSpot2 = new HotSpot(100,-140, 1);
-  scene.addHotSpots([s1HotSpot1, s1HotSpot2]);
+  const s1HotSpot1 = new HotSpot(0, 22.5, 1);
+  // const s1HotSpot2 = new HotSpot(100,-140, 1);
+  scene.addHotSpots([
+    s1HotSpot1,
+    // s1HotSpot2,
+  ]);
 
   const scene2 = new Scene([
     './assets/room_f.jpg',

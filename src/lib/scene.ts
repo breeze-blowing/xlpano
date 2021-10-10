@@ -1,6 +1,8 @@
 import {initArrayBuffer, loadImage} from "../utils/process";
 import Matrix4 from "../utils/matrix";
 import HotSpot from "./hotSpot";
+import {Fovy, PitchRange} from "../config/index";
+import {angleIn360, PI2Angle} from "../utils/math";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -162,6 +164,11 @@ export default class Scene {
     hotSpots: HotSpot[] = [];
 
     /**
+     * @property {HTMLCanvasElement} canvas canvas
+     * */
+    canvas: HTMLCanvasElement;
+
+    /**
      * @constructor 构造函数
      * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
@@ -183,6 +190,7 @@ export default class Scene {
      * */
     render(params: PanoRenderParams) {
         const { gl, canvas } = params;
+        this.canvas = canvas;
 
         // 根据 canvas 的宽高比例，对坐标进行转换
         const { width, height } = canvas;
@@ -214,7 +222,15 @@ export default class Scene {
             });
 
             const render = (deltaPitch: number, deltaYaw: number) => {
-                this.setMvpMatrix(gl, deltaPitch, deltaYaw);
+
+                // todo this.pitch 和 this.yaw 的计算在这里完成；包括 pitch 的 Range 限制和 yaw 的 360 转换；setMvp 里面直接用已经计算完成的 this.yaw 和 this.pitch
+                this.pitch += deltaPitch;
+                if (this.pitch < PitchRange[0]) this.pitch = PitchRange[0];
+                if (this.pitch > PitchRange[1]) this.pitch = PitchRange[1];
+                this.yaw += deltaYaw;
+                this.yaw = angleIn360(this.yaw);
+
+                this.setMvpMatrix(gl);
 
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -239,9 +255,25 @@ export default class Scene {
             canvas.onmouseout = () => this.dragging = false;
             canvas.onmousemove = (ev) => {
                 if (this.dragging) {
-                    const ratio = 10;
-                    const deltaPitch = (this.dragStartPoint.y - ev.offsetY) / ratio;
-                    const deltaYaw = (this.dragStartPoint.x - ev.offsetX) / ratio;
+                    // const ratio = 10;
+                    // const deltaPitch = (this.dragStartPoint.y - ev.offsetY) / ratio;
+                    // const deltaYaw = (this.dragStartPoint.x - ev.offsetX) / ratio;
+
+                    // todo 根据拖动距离计算角度
+                    const deltaX = this.dragStartPoint.x - ev.offsetX;
+                    const deltaY = this.dragStartPoint.y - ev.offsetY;
+
+                    let deltaPitch;
+                    if (this.pitch <= PitchRange[0] && deltaY <= 0) {
+                        deltaPitch = 0;
+                    } else if (this.pitch >= PitchRange[1] && deltaY >= 0) {
+                        deltaPitch = 0;
+                    } else {
+                        deltaPitch = PI2Angle(Math.atan(deltaY / (canvas.height / 2)));
+                    }
+
+                    const deltaYaw = PI2Angle(Math.atan(deltaX / (canvas.width / 2)));
+
                     render(deltaPitch, deltaYaw);
                     this.dragStartPoint = {
                         x: ev.offsetX,
@@ -284,30 +316,16 @@ export default class Scene {
     /**
      * 设置 mvp 矩阵
      * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
-     * @param {number} deltaPitch 俯仰角偏移值
-     * @param {number} deltaYaw 偏航角偏移值
      * */
-    private setMvpMatrix(gl: WebGLRenderingContextWithProgram, deltaPitch: number, deltaYaw: number) {
+    private setMvpMatrix(gl: WebGLRenderingContextWithProgram) {
         const u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
         if (!u_MvpMatrix) {
             throw new Error('获取 mvp 矩阵地址失败');
         }
 
         const mvpMatrix = new Matrix4();
-        mvpMatrix.setPerspective(90, 1, 0.1, 10.0);
-
+        mvpMatrix.setPerspective(Fovy, 1, 0.01, 10.0);
         mvpMatrix.lookAt(0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0, 1, 0);
-
-        this.pitch += deltaPitch;
-        this.yaw += deltaYaw;
-
-        const range = 86;
-        if (this.pitch > range) this.pitch = range;
-        if (this.pitch < -range) this.pitch = -range;
-
-        if (this.yaw > 360 || this.yaw < -360) this.yaw %= 360;
-        if (this.yaw < 0) this.yaw += 360;
-
         mvpMatrix.rotate(this.pitch, 1, 0, 0);
         mvpMatrix.rotate(this.yaw, 0, 1, 0);
 
