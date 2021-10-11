@@ -19,6 +19,7 @@ declare module '*.vert';
 declare module '*.frag';
 declare module '*.png';
 declare module '*.gif';
+declare module '*.jpg';
 
 /**
  * 内部层层传递的全局变量

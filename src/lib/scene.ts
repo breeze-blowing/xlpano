@@ -109,6 +109,9 @@ export default class Scene {
         gl.activeTexture(texUnit);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        // 下面两句能修复天空盒的裂缝
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
 
         const u_Sampler = gl.getUniformLocation(gl.program, `${samplerPrefix}_Sampler`);
