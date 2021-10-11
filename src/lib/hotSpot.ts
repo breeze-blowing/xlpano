@@ -88,6 +88,8 @@ export default class HotSpot {
     this.pitch += deltaPitch;
     this.yaw -= deltaYaw;
 
+    const { offsetWidth, offsetHeight } = this.container;
+
     /**
      * tan(|pitch|) = deltaTop / 1
      * pitch 的绝对值的正切：y 方向偏移量 / 深度(1)
@@ -105,6 +107,8 @@ export default class HotSpot {
      *
      * [0, 90): tan(yaw) = deltaLeft / 1
      * (270, 360): tan(360 - yaw) = deltaLeft / 1
+     *
+     * 横向偏移量还和 canvas 的宽高比还有关系，但是垂直方向的偏移量和宽高比没关系？？？
      * */
     this.yaw = angleIn360(this.yaw);
     let deltaLeft;
@@ -116,7 +120,7 @@ export default class HotSpot {
       // 直接给一个画布的宽度值，偏移到外面不显示
       deltaLeft = 2;
     }
-    deltaLeft *= (this.container.offsetWidth / 2);
+    deltaLeft *= (this.container.offsetWidth / 2) * (offsetHeight / offsetWidth);
     this.image.style.left = `${centerX + deltaLeft}px`;
   }
 
