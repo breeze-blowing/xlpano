@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>XLPano</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
     <script src="webgl-utils.js"></script>
     <script src="webgl-debug.js"></script>
     <style type="text/css">
@@ -10,9 +11,18 @@
             margin: 0;
             padding: 0;
         }
+        html, body {
+            overflow: hidden;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
-<div id="containerId" style="width: 100vw; height: 100vh"></div>
+<div id="containerId" style="width: 100vw; height: 100vh;"></div>
+<script>
+    document.body.addEventListener('touchmove', function (e) {
+        e.preventDefault(); //阻止默认的处理方式(阻止下拉滑动的效果)
+    }, {passive: false}); //passive 参数不能省略，用来兼容ios和android
+</script>
 </body>
 </html>

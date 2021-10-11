@@ -169,6 +169,11 @@ export default class Scene {
     canvas: HTMLCanvasElement;
 
     /**
+     * @property {WebGLRenderingContextWithProgram} gl WebGL绘制上下文
+     * */
+    gl: WebGLRenderingContextWithProgram;
+
+    /**
      * @constructor 构造函数
      * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
@@ -191,6 +196,7 @@ export default class Scene {
     render(params: PanoRenderParams) {
         const { gl, canvas } = params;
         this.canvas = canvas;
+        this.gl = gl;
 
         // 根据 canvas 的宽高比例，对坐标进行转换
         const { width, height } = canvas;
@@ -221,69 +227,89 @@ export default class Scene {
                 if (index <= 5) Scene.initTexture(gl, img, index as Unit);
             });
 
-            const render = (deltaPitch: number, deltaYaw: number) => {
-
-                // todo this.pitch 和 this.yaw 的计算在这里完成；包括 pitch 的 Range 限制和 yaw 的 360 转换；setMvp 里面直接用已经计算完成的 this.yaw 和 this.pitch
-                this.pitch += deltaPitch;
-                if (this.pitch < PitchRange[0]) this.pitch = PitchRange[0];
-                if (this.pitch > PitchRange[1]) this.pitch = PitchRange[1];
-                this.yaw += deltaYaw;
-                this.yaw = angleIn360(this.yaw);
-
-                this.setMvpMatrix(gl);
-
-                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-                Scene.allFacesIndices.forEach((faceIndices, index) => {
-                    this.renderFace(gl, faceIndices, index as Unit);
-                });
-
-                // 渲染热点
-                if (this.hotSpots && this.hotSpots.length) {
-                    this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, params));
-                }
-            };
-
+            // pc 端事件
             canvas.onmousedown = (ev) => {
                 this.dragging = true;
                 this.dragStartPoint = {
                     x: ev.offsetX,
                     y: ev.offsetY,
                 };
-            }
+            };
             canvas.onmouseup = () => this.dragging = false;
             canvas.onmouseout = () => this.dragging = false;
             canvas.onmousemove = (ev) => {
-                if (this.dragging) {
-                    // const ratio = 10;
-                    // const deltaPitch = (this.dragStartPoint.y - ev.offsetY) / ratio;
-                    // const deltaYaw = (this.dragStartPoint.x - ev.offsetX) / ratio;
+                if (this.dragging) this.moveTo(ev.offsetX, ev.offsetY, params);
+            };
+            // 手机端事件
+            canvas.ontouchstart = (ev) => {
+                const { top, left } = canvas.getBoundingClientRect();
+                const targetX = ev.changedTouches[0].clientX - left;
+                const targetY = ev.changedTouches[0].clientY - top;
+                this.dragStartPoint = {x: targetX, y: targetY,};
+            };
+            canvas.ontouchmove = (ev) => {
+                // 通过和 canvas 的视窗相对位置计算
+                const { top, left } = canvas.getBoundingClientRect();
+                const targetX = ev.changedTouches[0].clientX - left;
+                const targetY = ev.changedTouches[0].clientY - top;
+                this.moveTo(targetX, targetY, params);
+            };
 
-                    // todo 根据拖动距离计算角度
-                    const deltaX = this.dragStartPoint.x - ev.offsetX;
-                    const deltaY = this.dragStartPoint.y - ev.offsetY;
-
-                    let deltaPitch;
-                    if (this.pitch <= PitchRange[0] && deltaY <= 0) {
-                        deltaPitch = 0;
-                    } else if (this.pitch >= PitchRange[1] && deltaY >= 0) {
-                        deltaPitch = 0;
-                    } else {
-                        deltaPitch = PI2Angle(Math.atan(deltaY / (canvas.height / 2)));
-                    }
-
-                    const deltaYaw = PI2Angle(Math.atan(deltaX / (canvas.width / 2)));
-
-                    render(deltaPitch, deltaYaw);
-                    this.dragStartPoint = {
-                        x: ev.offsetX,
-                        y: ev.offsetY,
-                    };
-                }
-            }
-
-            render(0.0, 0.0);
+            this.draw(0.0, 0.0, params);
         });
+    }
+
+    /**
+     * 场景移动到某一点
+     * @param {number} targetX 移动目标点的X坐标
+     * @param {number} targetY 移动目标点的X坐标
+     * @param {PanoRenderParams} params 全局通用渲染参数
+     * */
+    private moveTo(targetX: number, targetY: number, params: PanoRenderParams) {
+        const deltaX = this.dragStartPoint.x - targetX;
+        const deltaY = this.dragStartPoint.y - targetY;
+
+        let deltaPitch;
+        if (this.pitch <= PitchRange[0] && deltaY <= 0) {
+            deltaPitch = 0;
+        } else if (this.pitch >= PitchRange[1] && deltaY >= 0) {
+            deltaPitch = 0;
+        } else {
+            deltaPitch = PI2Angle(Math.atan(deltaY / (this.canvas.height / 2)));
+        }
+
+        const deltaYaw = PI2Angle(Math.atan(deltaX / (this.canvas.width / 2)));
+
+        this.draw(deltaPitch, deltaYaw, params);
+        this.dragStartPoint = {x: targetX, y: targetY};
+    }
+
+    /**
+     * 绘制变换后的场景和热点
+     * @param deltaPitch {number} 场景的俯仰角偏移值
+     * @param deltaYaw {number} 场景的偏航角偏移值
+     * @param {PanoRenderParams} params 全局通用渲染参数
+     * */
+    private draw(deltaPitch: number, deltaYaw: number, params: PanoRenderParams) {
+        const { gl } = params;
+        this.pitch += deltaPitch;
+        if (this.pitch < PitchRange[0]) this.pitch = PitchRange[0];
+        if (this.pitch > PitchRange[1]) this.pitch = PitchRange[1];
+        this.yaw += deltaYaw;
+        this.yaw = angleIn360(this.yaw);
+
+        this.setMvpMatrix(gl);
+
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        Scene.allFacesIndices.forEach((faceIndices, index) => {
+            this.renderFace(gl, faceIndices, index as Unit);
+        });
+
+        // 渲染热点
+        if (this.hotSpots && this.hotSpots.length) {
+            this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, params));
+        }
     }
 
     /**
