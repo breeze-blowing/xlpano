@@ -18,6 +18,7 @@ declare let WebGLDebugUtils: {
 declare module '*.vert';
 declare module '*.frag';
 declare module '*.png';
+declare module '*.gif';
 
 /**
  * 内部层层传递的全局变量

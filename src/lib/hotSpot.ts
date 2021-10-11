@@ -1,6 +1,7 @@
 import ArrowImage from '../assets/image/arrow.png';
 import {PitchRange} from "../config/index";
 import {angle2PI, angleIn360} from "../utils/math";
+import {injectHotSpotArrowAnimCss} from "../utils/css";
 
 /**
  * 热点
@@ -8,22 +9,61 @@ import {angle2PI, angleIn360} from "../utils/math";
 export default class HotSpot {
 
   /**
+   * 是否加载了动画样式
+   * */
+  static HasInjectArrowAnimCss = false;
+
+  /**
    * @static {number} 热点大小
    * */
-  static size = 50;
+  static size = {
+    width: 80,
+    height: 50,
+  };
 
   /**
    * @static 创建热点图片节点
+   * @param {string} [description] 箭头上方的描述文字
    * */
-  static createArrow() {
+  static createArrow(description?: string) {
+    const imgSize = 50;
+    if (!HotSpot.HasInjectArrowAnimCss) injectHotSpotArrowAnimCss(imgSize);
+
+    const container = document.createElement('div');
+    container.style.width = `${HotSpot.size.width}px`;
+    container.style.height = `${HotSpot.size.height}px`;
+    container.style.position = 'absolute';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'center';
+    container.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+    container.style.borderRadius = '10px';
+    container.style.color = '#FFFFFF';
+    container.style.fontSize = '16px';
+    container.style.paddingTop = '2px';
+
+    if (description) container.innerText = description;
+
+    const imgCon = document.createElement('div');
+    imgCon.style.width = `${imgSize}px`;
+    imgCon.style.height = `${imgSize}px`;
+    imgCon.style.cursor = 'pointer';
+    imgCon.style.marginTop = '-14px';
+    imgCon.style.overflow = 'hidden';
+
+    container.appendChild(imgCon);
+
     const img = document.createElement('img');
     img.src = ArrowImage;
-    img.width = HotSpot.size;
-    img.height = HotSpot.size;
-    img.style.position = 'absolute';
-    img.style.opacity = '0.8';
-    img.style.cursor = 'pointer';
-    return img;
+    img.style.objectFit = 'cover';
+    img.width = imgSize;
+    img.height = 1250;
+    img.style.position = 'relative';
+    img.style.animation = 'xlpano_hot_spot_arrow_img_anim_name 2s steps(25) infinite';
+
+    imgCon.appendChild(img);
+
+    return container;
   }
 
   /**
@@ -44,7 +84,12 @@ export default class HotSpot {
   /**
    * @property {HTMLImageElement} image 图像
    * */
-  image: HTMLImageElement | null;
+  image: HTMLDivElement | null;
+
+  /**
+   * @property {string} description 描述
+   * */
+  description?: string;
 
   /**
    * @property {HTMLElement} container 容器
@@ -56,14 +101,16 @@ export default class HotSpot {
    * @param {number} pitch 位置-俯仰角-角度，范围是 (-90, 90)
    * @param {number} yaw 位置-偏航角-角度
    * @param {number} target 目标场景索引
+   * @param {{description?: string}} options 可选参数：description 描述
    * */
-  constructor(pitch: number, yaw: number, target: number) {
+  constructor(pitch: number, yaw: number, target: number, options?: { description?: string }) {
     if (pitch > PitchRange[1] || pitch < PitchRange[0]) {
       throw new Error(`俯仰角的范围不能超出[${PitchRange[0]}, ${PitchRange[1]}]`);
     }
     this.pitch = pitch;
     this.yaw = yaw;
     this.target = target;
+    if (options && options.description) this.description = options.description;
   }
 
   /**
@@ -77,13 +124,13 @@ export default class HotSpot {
     this.container = container;
 
     if (!this.image) {
-      this.image = HotSpot.createArrow();
+      this.image = HotSpot.createArrow(this.description);
       this.image.onclick = () => switchScene(this.target);
       container.append(this.image);
     }
 
-    const centerX = (container.offsetWidth - HotSpot.size) / 2;
-    const centerY = (container.offsetHeight - HotSpot.size) / 2;
+    const centerX = (container.offsetWidth - HotSpot.size.width) / 2;
+    const centerY = (container.offsetHeight - HotSpot.size.height) / 2;
 
     this.pitch += deltaPitch;
     this.yaw -= deltaYaw;

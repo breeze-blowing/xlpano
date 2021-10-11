@@ -13,8 +13,9 @@ function main() {
     './assets/bedroom/d.jpg',
     './assets/bedroom/b.jpg',
   ]);
-  const s1HotSpot1 = new HotSpot(0, 180, 1);
-  scene.addHotSpots([s1HotSpot1]);
+  const s1HotSpot1 = new HotSpot(-10, 126, 1, { description: '卫生间' });
+  const s1HotSpot2 = new HotSpot(-10, 0, 1, { description: '墙壁' });
+  scene.addHotSpots([s1HotSpot1, s1HotSpot2]);
 
   const scene2 = new Scene([
     './assets/restroom/f.jpg',
@@ -24,7 +25,7 @@ function main() {
     './assets/restroom/d.jpg',
     './assets/restroom/b.jpg',
   ]);
-  const s2HotSpot = new HotSpot(0, 180, 0);
+  const s2HotSpot = new HotSpot(-10, 170, 0, { description: '主卧' });
   scene2.addHotSpots(s2HotSpot);
 
   pano.addScene(scene);
