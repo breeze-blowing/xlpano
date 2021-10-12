@@ -51,6 +51,7 @@ export default class Pano {
     const canvas = document.createElement('canvas');
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
+    canvas.style.cursor = 'grab';
 
     container.append(canvas);
 

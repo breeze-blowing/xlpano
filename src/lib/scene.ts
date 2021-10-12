@@ -213,13 +213,20 @@ export default class Scene {
             // pc 端事件
             canvas.onmousedown = (ev) => {
                 this.dragging = true;
+                this.canvas.style.cursor = 'grabbing';
                 this.dragStartPoint = {
                     x: ev.offsetX,
                     y: ev.offsetY,
                 };
             };
-            canvas.onmouseup = () => this.dragging = false;
-            canvas.onmouseout = () => this.dragging = false;
+            canvas.onmouseup = () => {
+                this.dragging = false;
+                this.canvas.style.cursor = 'grab';
+            }
+            canvas.onmouseout = () => {
+                this.dragging = false;
+                this.canvas.style.cursor = 'grab';
+            }
             canvas.onmousemove = (ev) => {
                 if (this.dragging) this.moveTo(ev.offsetX, ev.offsetY, params);
             };

@@ -165,7 +165,7 @@ export default class HotSpot {
       deltaLeft = -Math.tan(angle2PI(360 - this.yaw));
     } else {
       // 直接给一个画布的宽度值，偏移到外面不显示
-      deltaLeft = 2;
+      deltaLeft = 4;
     }
     deltaLeft *= (this.container.offsetWidth / 2) * (offsetHeight / offsetWidth);
     this.image.style.left = `${centerX + deltaLeft}px`;
