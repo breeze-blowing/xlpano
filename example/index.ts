@@ -17,16 +17,16 @@ import r_u from './assets/restroom/u.jpg';
 function main() {
   const pano = new Pano('containerId', true);
 
-  const scene = new Scene([b_f, b_r, b_u, b_l, b_d, b_b]);
+  const scene1 = new Scene([b_f, b_r, b_u, b_l, b_d, b_b]);
   const s1HotSpot1 = new HotSpot(-10, 126, 1, { description: '卫生间' });
   const s1HotSpot2 = new HotSpot(-10, 0, 1, { description: '墙壁' });
-  scene.addHotSpots([s1HotSpot1, s1HotSpot2]);
+  scene1.addHotSpots([s1HotSpot1, s1HotSpot2]);
 
   const scene2 = new Scene([r_f, r_r, r_u, r_l, r_d, r_b]);
   const s2HotSpot = new HotSpot(-10, 170, 0, { description: '主卧' });
   scene2.addHotSpots(s2HotSpot);
 
-  pano.addScene(scene);
+  pano.addScene(scene1);
   pano.addScene(scene2);
   pano.render();
 }

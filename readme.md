@@ -1,17 +1,46 @@
 # XLPano 全景引擎
 
-## 开发
-`npm run dev`
+## 介绍
+XLPano 是一个轻量的全景开源库。
 
-## Todo
-### 1.0
-- 转场动画，入场动画
-- 图片资源加载优化，首个场景渐进显示；其他场景预加载
-  - 预加载分批次（和首个场景关联的第一批加载，其他第二批加载）
-- 直接给 Pano 构造函数传完整配置参数
+## 安装
+本库提供了直接使用 `<scrpit>` 标签引入方式和 `npm` 包两种方式
+### 标签引入
+`<script src="xlpano.min.js"></script>`
+### npm 安装
+`npm install xl-pano --save` 或者 `yarn add xl-pano`
 
-### 2.0
-- 初始位置要指向前面 f
-- 图片需要反转（顶点纹理坐标）
-- 一张矩阵纹理贴图的适配方式
-- 自定义热点
+## 使用
+本库提供了三个关键的类，完成全景的搭建。
+1. 引入 Pano, Scene, HotSpot
+```
+// 全局变量方式引入
+const { Pano, Scene, HotSpot } = window.XLPano;
+
+// ES6 module 方式引入
+import { Pano, Scene, HotSpot } from 'xl-pano';
+
+// CommonJS 方式引入
+const { Pano, Scene, HotSpot } = require('xl-pano');
+```
+2. 构建全景
+```
+// 创建 pano，containerId 是容器 dom 节点的 id
+const pano = new Pano('containerId');
+
+// 创建 scene，立方体贴图按照[前, 右, 上, 左, 下, 后]的顺序添加
+const scene = new Scene([f, r, u, l, d, b]);
+// 创建 hotSpot，传入俯仰角，偏航角，转换场景索引和热点描述参数
+const hotSpot = new HotSpot(-10, 126, 1, { description: '切换场景' });
+
+// scene 添加 hotSpot
+scene.addHotSpots(hotSpot);
+// pano 添加 scene
+pano.addScene(scene);
+
+// 渲染 pano
+pano.render();
+```
+
+## 接口
+Todo
