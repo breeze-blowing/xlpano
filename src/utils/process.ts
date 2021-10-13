@@ -1,5 +1,7 @@
 // 该工具集主要是 WebGL 流程中经常会用到的工具
 
+import {WebGLRenderingContextWithProgram} from "../types/index";
+
 /**
  * 把 TypedArray 传递给顶点着色器
  * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
@@ -37,6 +39,7 @@ export function initArrayBuffer(
 export function loadImage(src: string): Promise<TexImageSource> {
   return new Promise((resolve, reject) => {
     const image = new Image();
+    image.crossOrigin = 'anonymous';
     image.onload = () => resolve(image);
     image.onerror = error => reject(error);
     image.src = src;

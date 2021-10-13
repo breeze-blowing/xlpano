@@ -3,6 +3,7 @@ import Matrix4 from "../utils/matrix";
 import HotSpot from "./hotSpot";
 import {Fovy, PitchRange} from "../config/index";
 import {angleIn360, PI2Angle} from "../utils/math";
+import {PanoRenderParams, WebGLRenderingContextWithProgram} from "../types/index";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b

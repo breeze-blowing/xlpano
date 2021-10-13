@@ -2,6 +2,7 @@ import { getWebGLContext, initShaders } from '../utils/cuon-utils';
 import VertShader from '../shader/index.vert';
 import FragShader from '../shader/index.frag';
 import Scene from './scene';
+import {WebGLRenderingContextWithProgram} from "../types/index";
 
 /**
  * 容器

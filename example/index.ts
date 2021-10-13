@@ -1,6 +1,4 @@
-import Pano from '../src/lib/pano';
-import Scene from '../src/lib/scene';
-import HotSpot from '../src/lib/hotSpot';
+import { Pano, Scene, HotSpot } from '../src/index';
 
 import b_b from './assets/bedroom/b.jpg';
 import b_d from './assets/bedroom/d.jpg';

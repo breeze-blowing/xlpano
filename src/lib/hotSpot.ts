@@ -1,7 +1,7 @@
-import ArrowImage from '../assets/image/arrow.png';
 import {PitchRange} from "../config/index";
 import {angle2PI, angleIn360} from "../utils/math";
 import {injectHotSpotArrowAnimCss} from "../utils/css";
+import {PanoRenderParams} from "../types/index";
 
 /**
  * 热点
@@ -54,7 +54,7 @@ export default class HotSpot {
     container.appendChild(imgCon);
 
     const img = document.createElement('img');
-    img.src = ArrowImage;
+    img.src = '//img.asman.com.cn/assets/1634092040199_79260.png';
     img.style.objectFit = 'cover';
     img.width = imgSize;
     img.height = 1250;

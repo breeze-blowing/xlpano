@@ -1,6 +1,7 @@
 // 该工具集主要是顶层工具，一般只会在初始化程序时使用一次
 import WebGLUtils from './webgl-utils';
 import WebGLDebugUtils from './webgl-debug';
+import {WebGLRenderingContextWithProgram} from "../types/index";
 
 /**
  * 初始化着色器程序，并挂载到 gl 上
