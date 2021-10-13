@@ -42,6 +42,8 @@ function main() {
         console.log('result2: ', result2);
     }).then(() => {
         return execute('cp package.json dist/package.json')
+    }).then(() => {
+        return execute('cp readme.md dist/readme.md');
     }).catch(error => {
         console.error(error);
     }).finally(() => {

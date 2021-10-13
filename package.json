@@ -11,8 +11,12 @@
     "build": "rm -rf dist && node build.js",
     "deploy": "cd dist && npm publish"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "xulai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/breeze-blowing/xlpano"
+  },
+  "license": "MIT",
   "devDependencies": {
     "html-webpack-plugin": "^5.3.2",
     "raw-loader": "^4.0.2",
