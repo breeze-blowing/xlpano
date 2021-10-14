@@ -1,6 +1,7 @@
 import {PitchRange} from "../config/index";
 import {angle2PI, angleIn360} from "../utils/math";
-import {PanoRenderParams} from "../types/index";
+import Pano from "./pano";
+import Scene from "./scene";
 
 /**
  * 热点
@@ -28,9 +29,14 @@ export default class HotSpot {
   target: number
 
   /**
-   * @property {HTMLElement} container 容器
+   * @property {Pano} pano 爷爷容器Pano
    * */
-  container: HTMLElement;
+  pano: Pano;
+
+  /**
+   * @property {Scene} scene 父容器Scene
+   * */
+  scene: Scene;
 
   /**
    * @constructor
@@ -54,13 +60,16 @@ export default class HotSpot {
    * 把热点图像插入到容器内
    * @param deltaPitch {number} 场景的俯仰角偏移值
    * @param deltaYaw {number} 场景的偏航角偏移值
-   * @param {PanoRenderParams} params 全局通用渲染参数
+   * @param {Pano} pano 爷爷容器
+   * @param {Scene} scene 父容器
    * */
-  render(deltaPitch: number, deltaYaw: number, params: PanoRenderParams) {
-    const { container, switchScene } = params;
-    this.container = container;
+  render(deltaPitch: number, deltaYaw: number, pano: Pano, scene: Scene) {
+    this.pano = pano;
+    this.scene = scene;
 
-    this.dom.onclick = () => switchScene(this.target);
+    const { container } = this.pano;
+
+    this.dom.onclick = this.onClick;
     container.append(this.dom);
 
     const { width, height } = this.dom.getBoundingClientRect();
@@ -71,7 +80,7 @@ export default class HotSpot {
     this.pitch += deltaPitch;
     this.yaw -= deltaYaw;
 
-    const { offsetWidth, offsetHeight } = this.container;
+    const { offsetWidth, offsetHeight } = container;
 
     /**
      * tan(|pitch|) = deltaTop / 1
@@ -79,7 +88,7 @@ export default class HotSpot {
      * pitch 的绝对值不超过配置的范围
      * deltaTop 的计算结果是归一化的，换算成像素值：* canvas.height / 2
      * */
-    const deltaTop = Math.tan(angle2PI(Math.abs(this.pitch))) * (this.container.offsetHeight / 2);
+    const deltaTop = Math.tan(angle2PI(Math.abs(this.pitch))) * (container.offsetHeight / 2);
     const top = this.pitch > 0 ? centerY - deltaTop : centerY + deltaTop;
     this.dom.style.top = `${top}px`;
 
@@ -103,8 +112,20 @@ export default class HotSpot {
       // 直接给一个画布的宽度值，偏移到外面不显示
       deltaLeft = 4;
     }
-    deltaLeft *= (this.container.offsetWidth / 2) * (offsetHeight / offsetWidth);
+    deltaLeft *= (container.offsetWidth / 2) * (offsetHeight / offsetWidth);
     this.dom.style.left = `${centerX + deltaLeft}px`;
+  }
+
+  /**
+   * 点击热点执行函数
+   * */
+  onClick = () => {
+    // this.pano.switchScene(this.target);
+    const duration = 1000;
+    this.scene.moveToHotSpot(this, duration);
+    setTimeout(() => {
+      this.pano.switchScene(this.target);
+    }, duration);
   }
 
   /**
@@ -112,7 +133,7 @@ export default class HotSpot {
    * */
   destroy() {
     // 移除图片
-    if (this.container) this.container.removeChild(this.dom);
+    if (this.pano.container) this.pano.container.removeChild(this.dom);
   }
 
 }

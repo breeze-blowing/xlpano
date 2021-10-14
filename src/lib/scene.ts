@@ -3,7 +3,8 @@ import Matrix4 from "../utils/matrix";
 import HotSpot from "./hotSpot";
 import {Fovy, PitchRange} from "../config/index";
 import {angleIn360, PI2Angle} from "../utils/math";
-import {PanoRenderParams, WebGLRenderingContextWithProgram} from "../types/index";
+import {WebGLRenderingContextWithProgram} from "../types/index";
+import Pano from "./pano";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -168,14 +169,14 @@ export default class Scene {
     hotSpots: HotSpot[] = [];
 
     /**
-     * @property {HTMLCanvasElement} canvas canvas
+     * @property {boolean} switching 是否正在进行转场
      * */
-    canvas: HTMLCanvasElement;
+    switching = false;
 
     /**
-     * @property {WebGLRenderingContextWithProgram} gl WebGL绘制上下文
+     * @property {Pano} pano 父容器Pano
      * */
-    gl: WebGLRenderingContextWithProgram;
+    pano: Pano;
 
     /**
      * @constructor 构造函数
@@ -195,12 +196,12 @@ export default class Scene {
 
     /**
      * 渲染到 pano
-     * @param {PanoRenderParams} params 全局通用渲染参数
+     * @param {Pano} pano 父容器
      * */
-    render(params: PanoRenderParams) {
-        const { gl, canvas } = params;
-        this.canvas = canvas;
-        this.gl = gl;
+    render(pano: Pano) {
+        this.pano = pano;
+
+        const { gl, canvas } = this.pano;
 
         initArrayBuffer(gl, Scene.vertices, 3, gl.FLOAT, 'a_Position');
         initArrayBuffer(gl, Scene.texs, 2, gl.FLOAT, 'a_TexCoord');
@@ -214,7 +215,7 @@ export default class Scene {
             // pc 端事件
             canvas.onmousedown = (ev) => {
                 this.dragging = true;
-                this.canvas.style.cursor = 'grabbing';
+                canvas.style.cursor = 'grabbing';
                 this.dragStartPoint = {
                     x: ev.offsetX,
                     y: ev.offsetY,
@@ -222,14 +223,14 @@ export default class Scene {
             };
             canvas.onmouseup = () => {
                 this.dragging = false;
-                this.canvas.style.cursor = 'grab';
+                canvas.style.cursor = 'grab';
             }
             canvas.onmouseout = () => {
                 this.dragging = false;
-                this.canvas.style.cursor = 'grab';
+                canvas.style.cursor = 'grab';
             }
             canvas.onmousemove = (ev) => {
-                if (this.dragging) this.moveTo(ev.offsetX, ev.offsetY, params);
+                if (this.dragging && !this.switching) this.moveTo(ev.offsetX, ev.offsetY);
             };
             // 手机端事件
             canvas.ontouchstart = (ev) => {
@@ -243,10 +244,10 @@ export default class Scene {
                 const { top, left } = canvas.getBoundingClientRect();
                 const targetX = ev.changedTouches[0].clientX - left;
                 const targetY = ev.changedTouches[0].clientY - top;
-                this.moveTo(targetX, targetY, params);
+                if (!this.switching) this.moveTo(targetX, targetY);
             };
 
-            this.draw(0.0, 0.0, params);
+            this.draw(0.0, 0.0);
         });
     }
 
@@ -254,9 +255,10 @@ export default class Scene {
      * 场景移动到某一点
      * @param {number} targetX 移动目标点的X坐标
      * @param {number} targetY 移动目标点的X坐标
-     * @param {PanoRenderParams} params 全局通用渲染参数
      * */
-    private moveTo(targetX: number, targetY: number, params: PanoRenderParams) {
+    private moveTo(targetX: number, targetY: number) {
+        const { canvas } = this.pano;
+
         const deltaX = this.dragStartPoint.x - targetX;
         const deltaY = this.dragStartPoint.y - targetY;
 
@@ -266,12 +268,12 @@ export default class Scene {
         } else if (this.pitch >= PitchRange[1] && deltaY >= 0) {
             deltaPitch = 0;
         } else {
-            deltaPitch = PI2Angle(Math.atan(deltaY / (this.canvas.height / 2)));
+            deltaPitch = PI2Angle(Math.atan(deltaY / (canvas.height / 2)));
         }
 
-        const deltaYaw = PI2Angle(Math.atan(deltaX / (this.canvas.width / 2)));
+        const deltaYaw = PI2Angle(Math.atan(deltaX / (canvas.width / 2)));
 
-        this.draw(deltaPitch, deltaYaw, params);
+        this.draw(deltaPitch, deltaYaw);
         this.dragStartPoint = {x: targetX, y: targetY};
     }
 
@@ -279,10 +281,9 @@ export default class Scene {
      * 绘制变换后的场景和热点
      * @param deltaPitch {number} 场景的俯仰角偏移值
      * @param deltaYaw {number} 场景的偏航角偏移值
-     * @param {PanoRenderParams} params 全局通用渲染参数
      * */
-    private draw(deltaPitch: number, deltaYaw: number, params: PanoRenderParams) {
-        const { gl } = params;
+    private draw(deltaPitch: number, deltaYaw: number) {
+        const { gl } = this.pano;
         this.pitch += deltaPitch;
         if (this.pitch < PitchRange[0]) this.pitch = PitchRange[0];
         if (this.pitch > PitchRange[1]) this.pitch = PitchRange[1];
@@ -299,7 +300,7 @@ export default class Scene {
 
         // 渲染热点
         if (this.hotSpots && this.hotSpots.length) {
-            this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, params));
+            this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, this.pano, this));
         }
     }
 
@@ -342,7 +343,7 @@ export default class Scene {
             throw new Error('获取 mvp 矩阵地址失败');
         }
 
-        const { width, height } = this.canvas;
+        const { width, height } = this.pano.canvas;
         const mvpMatrix = new Matrix4();
         mvpMatrix.setPerspective(Fovy, width / height, 0.01, 10.0);
         mvpMatrix.lookAt(0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0, 1, 0);
@@ -355,11 +356,33 @@ export default class Scene {
     /**
      * 转场效果，走近目标热点
      * @param {HotSpot} hotSpot 目标热点
+     * @param {number} duration 持续时间
      * */
-    moveToHotSpot(hotSpot: HotSpot) {
-        // 禁止拖动
-        // 移动过去
-        // 恢复拖动
+    moveToHotSpot(hotSpot: HotSpot, duration: number) {
+        this.switching = true;
+
+        let start = Date.now();
+        const startSign = start;
+        const totalDeltaPitch = -hotSpot.pitch;
+        const totalDeltaYaw = hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw;
+
+        const pitchSpeed = totalDeltaPitch / duration;
+        const yawSpeed = totalDeltaYaw / duration;
+
+        const anim = () => {
+            requestAnimationFrame(() => {
+                const now = Date.now();
+                const deltaTime = now - start;
+                this.draw(pitchSpeed * deltaTime, yawSpeed * deltaTime);
+                if (now < startSign + duration) {
+                    start = now;
+                    anim();
+                } else {
+                    this.switching = false;
+                }
+            });
+        };
+        anim();
     }
 
     /**

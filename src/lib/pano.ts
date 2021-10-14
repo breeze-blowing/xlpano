@@ -82,7 +82,7 @@ export default class Pano {
    * 切换场景
    * @param {number} sceneIndex 切换后的场景
    * */
-  switch = (sceneIndex: number) => {
+  switchScene = (sceneIndex: number) => {
     const currentScene = this.scenes[this.sceneIndex];
     if (currentScene) currentScene.destroy();
     this.sceneIndex = sceneIndex;
@@ -100,11 +100,6 @@ export default class Pano {
     const gl = this.gl;
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
-    currentScene.render({
-      gl,
-      canvas: this.canvas,
-      container: this.container,
-      switchScene: this.switch,
-    });
+    currentScene.render(this);
   }
 }
