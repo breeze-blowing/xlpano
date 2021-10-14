@@ -39,12 +39,12 @@ export default class Scene {
      * @static {Float32Array} texs 顶点对应的纹理坐标
      * */
     static texs = new Float32Array([
-        1.0, 1.0,    0.0, 1.0,    0.0, 0.0,    1.0, 0.0,
-        0.0, 1.0,    0.0, 0.0,    1.0, 0.0,    1.0, 1.0,
-        1.0, 0.0,    1.0, 1.0,    0.0, 1.0,    0.0, 0.0,
-        1.0, 1.0,    0.0, 1.0,    0.0, 0.0,    1.0, 0.0,
-        0.0, 0.0,    1.0, 0.0,    1.0, 1.0,    0.0, 1.0,
-        0.0, 0.0,    1.0, 0.0,    1.0, 1.0,    0.0, 1.0,
+        0.0, 1.0,    1.0, 1.0,    1.0, 0.0,    0.0, 0.0,
+        1.0, 1.0,    1.0, 0.0,    0.0, 0.0,    0.0, 1.0,
+        1.0, 1.0,    1.0, 0.0,    0.0, 0.0,    0.0, 1.0,
+        0.0, 1.0,    1.0, 1.0,    1.0, 0.0,    0.0, 0.0,
+        0.0, 1.0,    1.0, 1.0,    1.0, 0.0,    0.0, 0.0,
+        1.0, 0.0,    0.0, 0.0,    0.0, 1.0,    1.0, 1.0,
     ]);
 
     /**
@@ -308,7 +308,9 @@ export default class Scene {
      * @return {Promise<TexImageSource[]>} 图像资源
      * */
     private loadTextures(): Promise<TexImageSource[]> {
-        return Promise.all(this.textures.map(texture => loadImage(texture)));
+        // 交换前后，左右
+        const [f, r, u, l, d, b] = this.textures;
+        return Promise.all([b, r, u, l, d, f].map(texture => loadImage(texture)));
     }
 
     /**
