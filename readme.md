@@ -30,8 +30,8 @@ const pano = new Pano('containerId');
 
 // 创建 scene，立方体贴图按照[前, 右, 上, 左, 下, 后]的顺序添加
 const scene = new Scene([f, r, u, l, d, b]);
-// 创建 hotSpot，传入俯仰角，偏航角，转换场景索引和热点描述参数
-const hotSpot = new HotSpot(-10, 126, 1, { description: '切换场景' });
+// 创建 hotSpot，传入热点元素，目标场景索引，俯仰角，偏航角
+const hotSpot = new HotSpot(HtmlElement, 1, { pitch: -10, yaw: 55 });
 
 // scene 添加 hotSpot
 scene.addHotSpots(hotSpot);
