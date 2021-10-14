@@ -90,7 +90,10 @@ function loadShader(gl: WebGLRenderingContextWithProgram, type: GLenum, source: 
  */
 export function getWebGLContext(canvas: HTMLCanvasElement, debug?: boolean): WebGLRenderingContextWithProgram {
   // @ts-ignore 创建 WebGL 上下文
-  let gl = WebGLUtils.setupWebGL(canvas);
+  let gl = WebGLUtils.setupWebGL(canvas, {
+    // 开启抗锯齿
+    antialias: true,
+  });
   if (!gl) {
     throw new Error('创建 WebGL 上下文失败');
   }
