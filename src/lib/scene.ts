@@ -353,6 +353,16 @@ export default class Scene {
     }
 
     /**
+     * 转场效果，走近目标热点
+     * @param {HotSpot} hotSpot 目标热点
+     * */
+    moveToHotSpot(hotSpot: HotSpot) {
+        // 禁止拖动
+        // 移动过去
+        // 恢复拖动
+    }
+
+    /**
      * 销毁
      * */
     destroy() {
