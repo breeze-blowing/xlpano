@@ -1,6 +1,7 @@
 // 该工具集主要是顶层工具，一般只会在初始化程序时使用一次
 import WebGLUtils from './webgl-utils';
 import WebGLDebugUtils from './webgl-debug';
+import {WebGLRenderingContextWithProgram} from "../types/index";
 
 /**
  * 初始化着色器程序，并挂载到 gl 上
@@ -89,7 +90,10 @@ function loadShader(gl: WebGLRenderingContextWithProgram, type: GLenum, source: 
  */
 export function getWebGLContext(canvas: HTMLCanvasElement, debug?: boolean): WebGLRenderingContextWithProgram {
   // @ts-ignore 创建 WebGL 上下文
-  let gl = WebGLUtils.setupWebGL(canvas);
+  let gl = WebGLUtils.setupWebGL(canvas, {
+    // 开启抗锯齿
+    antialias: true,
+  });
   if (!gl) {
     throw new Error('创建 WebGL 上下文失败');
   }

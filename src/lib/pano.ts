@@ -2,6 +2,7 @@ import { getWebGLContext, initShaders } from '../utils/cuon-utils';
 import VertShader from '../shader/index.vert';
 import FragShader from '../shader/index.frag';
 import Scene from './scene';
+import {WebGLRenderingContextWithProgram} from "../types/index";
 
 /**
  * 容器
@@ -49,8 +50,16 @@ export default class Pano {
       container.style.position = 'relative';
     }
     const canvas = document.createElement('canvas');
-    canvas.width = container.offsetWidth;
-    canvas.height = container.offsetHeight;
+
+    // 开启 HiDPI
+    const desiredCSSWidth = container.offsetWidth;
+    const desiredCSSHeight = container.offsetHeight;
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    canvas.width  = desiredCSSWidth  * devicePixelRatio;
+    canvas.height = desiredCSSHeight * devicePixelRatio;
+    canvas.style.width  = desiredCSSWidth  + "px";
+    canvas.style.height = desiredCSSHeight + "px";
+
     canvas.style.cursor = 'grab';
 
     container.append(canvas);

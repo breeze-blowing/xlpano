@@ -3,6 +3,7 @@ import Matrix4 from "../utils/matrix";
 import HotSpot from "./hotSpot";
 import {Fovy, PitchRange} from "../config/index";
 import {angleIn360, PI2Angle} from "../utils/math";
+import {PanoRenderParams, WebGLRenderingContextWithProgram} from "../types/index";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -38,12 +39,12 @@ export default class Scene {
      * @static {Float32Array} texs 顶点对应的纹理坐标
      * */
     static texs = new Float32Array([
-        1.0, 1.0,    0.0, 1.0,    0.0, 0.0,    1.0, 0.0,
-        0.0, 1.0,    0.0, 0.0,    1.0, 0.0,    1.0, 1.0,
-        1.0, 0.0,    1.0, 1.0,    0.0, 1.0,    0.0, 0.0,
-        1.0, 1.0,    0.0, 1.0,    0.0, 0.0,    1.0, 0.0,
-        0.0, 0.0,    1.0, 0.0,    1.0, 1.0,    0.0, 1.0,
-        0.0, 0.0,    1.0, 0.0,    1.0, 1.0,    0.0, 1.0,
+        0.0, 1.0,    1.0, 1.0,    1.0, 0.0,    0.0, 0.0,
+        1.0, 1.0,    1.0, 0.0,    0.0, 0.0,    0.0, 1.0,
+        1.0, 1.0,    1.0, 0.0,    0.0, 0.0,    0.0, 1.0,
+        0.0, 1.0,    1.0, 1.0,    1.0, 0.0,    0.0, 0.0,
+        0.0, 1.0,    1.0, 1.0,    1.0, 0.0,    0.0, 0.0,
+        1.0, 0.0,    0.0, 0.0,    0.0, 1.0,    1.0, 1.0,
     ]);
 
     /**
@@ -108,11 +109,11 @@ export default class Scene {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
         gl.activeTexture(texUnit);
         gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        // 下面两句能修复天空盒的裂缝
+
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
 
         const u_Sampler = gl.getUniformLocation(gl.program, `${samplerPrefix}_Sampler`);
         if (!u_Sampler) {
@@ -307,7 +308,9 @@ export default class Scene {
      * @return {Promise<TexImageSource[]>} 图像资源
      * */
     private loadTextures(): Promise<TexImageSource[]> {
-        return Promise.all(this.textures.map(texture => loadImage(texture)));
+        // 交换前后，左右
+        const [f, r, u, l, d, b] = this.textures;
+        return Promise.all([b, r, u, l, d, f].map(texture => loadImage(texture)));
     }
 
     /**
@@ -347,6 +350,16 @@ export default class Scene {
         mvpMatrix.rotate(this.yaw, 0, 1, 0);
 
         gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    }
+
+    /**
+     * 转场效果，走近目标热点
+     * @param {HotSpot} hotSpot 目标热点
+     * */
+    moveToHotSpot(hotSpot: HotSpot) {
+        // 禁止拖动
+        // 移动过去
+        // 恢复拖动
     }
 
     /**

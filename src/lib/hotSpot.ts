@@ -1,7 +1,6 @@
-import ArrowImage from '../assets/image/arrow.png';
 import {PitchRange} from "../config/index";
 import {angle2PI, angleIn360} from "../utils/math";
-import {injectHotSpotArrowAnimCss} from "../utils/css";
+import {PanoRenderParams} from "../types/index";
 
 /**
  * 热点
@@ -9,62 +8,9 @@ import {injectHotSpotArrowAnimCss} from "../utils/css";
 export default class HotSpot {
 
   /**
-   * 是否加载了动画样式
+   * @property {HTMLElement} dom 热点元素
    * */
-  static HasInjectArrowAnimCss = false;
-
-  /**
-   * @static {number} 热点大小
-   * */
-  static size = {
-    width: 80,
-    height: 50,
-  };
-
-  /**
-   * @static 创建热点图片节点
-   * @param {string} [description] 箭头上方的描述文字
-   * */
-  static createArrow(description?: string) {
-    const imgSize = 50;
-    if (!HotSpot.HasInjectArrowAnimCss) injectHotSpotArrowAnimCss(imgSize);
-
-    const container = document.createElement('div');
-    container.style.width = `${HotSpot.size.width}px`;
-    container.style.height = `${HotSpot.size.height}px`;
-    container.style.position = 'absolute';
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.alignItems = 'center';
-    container.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
-    container.style.borderRadius = '10px';
-    container.style.color = '#FFFFFF';
-    container.style.fontSize = '16px';
-    container.style.paddingTop = '2px';
-
-    if (description) container.innerText = description;
-
-    const imgCon = document.createElement('div');
-    imgCon.style.width = `${imgSize}px`;
-    imgCon.style.height = `${imgSize}px`;
-    imgCon.style.cursor = 'pointer';
-    imgCon.style.marginTop = '-14px';
-    imgCon.style.overflow = 'hidden';
-
-    container.appendChild(imgCon);
-
-    const img = document.createElement('img');
-    img.src = ArrowImage;
-    img.style.objectFit = 'cover';
-    img.width = imgSize;
-    img.height = 1250;
-    img.style.position = 'relative';
-    img.style.animation = 'xlpano_hot_spot_arrow_img_anim_name 2s steps(25) infinite';
-
-    imgCon.appendChild(img);
-
-    return container;
-  }
+  dom: HTMLElement;
 
   /**
    * @property {number} pitch 位置-俯仰角-角度
@@ -82,35 +28,26 @@ export default class HotSpot {
   target: number
 
   /**
-   * @property {HTMLImageElement} image 图像
-   * */
-  image: HTMLDivElement | null;
-
-  /**
-   * @property {string} description 描述
-   * */
-  description?: string;
-
-  /**
    * @property {HTMLElement} container 容器
    * */
   container: HTMLElement;
 
   /**
    * @constructor
-   * @param {number} pitch 位置-俯仰角-角度，范围是 (-90, 90)
-   * @param {number} yaw 位置-偏航角-角度
-   * @param {number} target 目标场景索引
-   * @param {{description?: string}} options 可选参数：description 描述
+   * @param {HTMLElement} dom 热点元素
+   * @param {number} target 转场目标场景索引
+   * @param {{pitch?: number, yaw?: number}} options 可选参数：pitch 位置-俯仰角-角度，范围是 (-90, 90)；yaw 位置-偏航角-角度
    * */
-  constructor(pitch: number, yaw: number, target: number, options?: { description?: string }) {
+  constructor(dom: HTMLElement, target: number, options?: { pitch?: number, yaw?: number }) {
+    if (!options) options = {};
+    const { pitch = 0, yaw = 0 } = options;
     if (pitch > PitchRange[1] || pitch < PitchRange[0]) {
       throw new Error(`俯仰角的范围不能超出[${PitchRange[0]}, ${PitchRange[1]}]`);
     }
+    this.dom = dom;
     this.pitch = pitch;
     this.yaw = yaw;
     this.target = target;
-    if (options && options.description) this.description = options.description;
   }
 
   /**
@@ -123,14 +60,13 @@ export default class HotSpot {
     const { container, switchScene } = params;
     this.container = container;
 
-    if (!this.image) {
-      this.image = HotSpot.createArrow(this.description);
-      this.image.onclick = () => switchScene(this.target);
-      container.append(this.image);
-    }
+    this.dom.onclick = () => switchScene(this.target);
+    container.append(this.dom);
 
-    const centerX = (container.offsetWidth - HotSpot.size.width) / 2;
-    const centerY = (container.offsetHeight - HotSpot.size.height) / 2;
+    const { width, height } = this.dom.getBoundingClientRect();
+
+    const centerX = (container.offsetWidth - width) / 2;
+    const centerY = (container.offsetHeight - height) / 2;
 
     this.pitch += deltaPitch;
     this.yaw -= deltaYaw;
@@ -145,7 +81,7 @@ export default class HotSpot {
      * */
     const deltaTop = Math.tan(angle2PI(Math.abs(this.pitch))) * (this.container.offsetHeight / 2);
     const top = this.pitch > 0 ? centerY - deltaTop : centerY + deltaTop;
-    this.image.style.top = `${top}px`;
+    this.dom.style.top = `${top}px`;
 
     /**
      * yaw 先转换到 [0, 360)，再区分 [0, 90, 180, 270, 360) 各个区间计算
@@ -168,7 +104,7 @@ export default class HotSpot {
       deltaLeft = 4;
     }
     deltaLeft *= (this.container.offsetWidth / 2) * (offsetHeight / offsetWidth);
-    this.image.style.left = `${centerX + deltaLeft}px`;
+    this.dom.style.left = `${centerX + deltaLeft}px`;
   }
 
   /**
@@ -176,8 +112,7 @@ export default class HotSpot {
    * */
   destroy() {
     // 移除图片
-    if (this.container) this.container.removeChild(this.image);
-    this.image = null;
+    if (this.container) this.container.removeChild(this.dom);
   }
 
 }
