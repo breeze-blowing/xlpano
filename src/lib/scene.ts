@@ -1,7 +1,6 @@
 import {initArrayBuffer, loadImage} from "../utils/process";
 import Matrix4 from "../utils/matrix";
 import HotSpot from "./hotSpot";
-import {Fovy, PitchRange} from "../config/index";
 import {angleIn360, PI2Angle} from "../utils/math";
 import {WebGLRenderingContextWithProgram} from "../types/index";
 import Pano from "./pano";
@@ -154,6 +153,33 @@ export default class Scene {
     yaw = 0.0;
 
     /**
+     * 视点参数
+     * position: 视点位置
+     * target: 视线方向
+     * up: 上方向
+     * */
+    eye = {
+        position: { x: 0.0, y: 0.0, z: 0.0 },
+        target: { x: 0.0, y: 0.0, z: -1.0 },
+        up: { x: 0.0, y: 1.0, z: 0.0 },
+    }
+    /**
+     * @property {[number, number]} yRange 俯仰可视范围角度
+     * */
+    yRange = [-86, 86];
+    /**
+     * @property {number} fovy 静态可视范围角度
+     * */
+    fovy = 90;
+    /**
+     * 获取 pitch 可移动范围
+     * */
+    getPitchRange() {
+        const fovyHalf = this.fovy / 2;
+        return [this.yRange[0] + fovyHalf, this.yRange[1] - fovyHalf];
+    }
+
+    /**
      * @property {boolean} dragging 是否正在被拖拽
      * 鼠标按下置为 true；鼠标释放置为 false
      * */
@@ -263,6 +289,7 @@ export default class Scene {
         const deltaY = this.dragStartPoint.y - targetY;
 
         let deltaPitch;
+        const PitchRange = this.getPitchRange();
         if (this.pitch <= PitchRange[0] && deltaY <= 0) {
             deltaPitch = 0;
         } else if (this.pitch >= PitchRange[1] && deltaY >= 0) {
@@ -285,17 +312,18 @@ export default class Scene {
     private draw(deltaPitch: number, deltaYaw: number) {
         const { gl } = this.pano;
         this.pitch += deltaPitch;
+        const PitchRange = this.getPitchRange();
         if (this.pitch < PitchRange[0]) this.pitch = PitchRange[0];
         if (this.pitch > PitchRange[1]) this.pitch = PitchRange[1];
         this.yaw += deltaYaw;
         this.yaw = angleIn360(this.yaw);
 
-        this.setMvpMatrix(gl);
+        this.setMvpMatrix();
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         Scene.allFacesIndices.forEach((faceIndices, index) => {
-            this.renderFace(gl, faceIndices, index as Unit);
+            this.renderFace(faceIndices, index as Unit);
         });
 
         // 渲染热点
@@ -316,11 +344,11 @@ export default class Scene {
 
     /**
      * 渲染立方体的其中一面
-     * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
      * @param {Uint8Array} indices 该面的顶点索引
      * @param {Unit} unit 每个面的编号
      * */
-    private renderFace(gl: WebGLRenderingContextWithProgram, indices: Uint8Array, unit: Unit) {
+    private renderFace(indices: Uint8Array, unit: Unit) {
+        const { gl } = this.pano;
         const indexBuffer = gl.createBuffer();
         if (!indexBuffer) {
             throw new Error('创建索引缓冲区对象失败');
@@ -333,11 +361,13 @@ export default class Scene {
         gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
     }
 
-    /**
-     * 设置 mvp 矩阵
-     * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
-     * */
-    private setMvpMatrix(gl: WebGLRenderingContextWithProgram) {
+    private setMvpMatrix() {
+        const { gl } = this.pano;
+        const {
+            position: { x: eyeX, y: eyeY, z: eyeZ },
+            target: { x: centerX, y: centerY, z: centerZ },
+            up: { x: upX, y: upY, z: upZ },
+        } = this.eye;
         const u_MvpMatrix = gl.getUniformLocation(gl.program, 'u_MvpMatrix');
         if (!u_MvpMatrix) {
             throw new Error('获取 mvp 矩阵地址失败');
@@ -345,8 +375,8 @@ export default class Scene {
 
         const { width, height } = this.pano.canvas;
         const mvpMatrix = new Matrix4();
-        mvpMatrix.setPerspective(Fovy, width / height, 0.01, 10.0);
-        mvpMatrix.lookAt(0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0, 1, 0);
+        mvpMatrix.setPerspective(this.fovy, width / height, 0.01, 10.0);
+        mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
         mvpMatrix.rotate(this.pitch, 1, 0, 0);
         mvpMatrix.rotate(this.yaw, 0, 1, 0);
 
@@ -366,18 +396,24 @@ export default class Scene {
         const totalDeltaPitch = -hotSpot.pitch;
         const totalDeltaYaw = hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw;
 
-        const pitchSpeed = totalDeltaPitch / duration;
-        const yawSpeed = totalDeltaYaw / duration;
+        const pitchSpeed = totalDeltaPitch / (duration / 2);
+        const yawSpeed = totalDeltaYaw / (duration / 2);
 
         const anim = () => {
             requestAnimationFrame(() => {
                 const now = Date.now();
                 const deltaTime = now - start;
-                this.draw(pitchSpeed * deltaTime, yawSpeed * deltaTime);
-                if (now < startSign + duration) {
+                if (now < startSign + duration / 2) {
+                    this.draw(pitchSpeed * deltaTime, yawSpeed * deltaTime);
                     start = now;
                     anim();
+                } else if (now < startSign + duration) {
+                    this.fovy -= 1;
+                    this.draw(0, 0);
+                    anim();
                 } else {
+                    this.eye.position.z = 0;
+                    this.fovy = 90;
                     this.switching = false;
                 }
             });

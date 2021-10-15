@@ -1,4 +1,3 @@
-import {PitchRange} from "../config/index";
 import {angle2PI, angleIn360} from "../utils/math";
 import Pano from "./pano";
 import Scene from "./scene";
@@ -47,9 +46,6 @@ export default class HotSpot {
   constructor(dom: HTMLElement, target: number, options?: { pitch?: number, yaw?: number }) {
     if (!options) options = {};
     const { pitch = 0, yaw = 0 } = options;
-    if (pitch > PitchRange[1] || pitch < PitchRange[0]) {
-      throw new Error(`俯仰角的范围不能超出[${PitchRange[0]}, ${PitchRange[1]}]`);
-    }
     this.dom = dom;
     this.pitch = pitch;
     this.yaw = yaw;
