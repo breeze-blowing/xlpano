@@ -224,7 +224,6 @@ export default class Scene {
     /**
      * 渲染到 pano
      * @param {Pano} pano 父容器
-     * @param {boolean} anim 是否执行入场动画
      * */
     render(pano: Pano) {
         this.pano = pano;
@@ -388,7 +387,6 @@ export default class Scene {
     /**
      * 转场效果，走近目标热点
      * @param {HotSpot} hotSpot 目标热点
-     * @param {number} duration 持续时间
      * */
     moveToHotSpot(hotSpot: HotSpot) {
         this.switching = true;
