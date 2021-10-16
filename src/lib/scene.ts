@@ -4,7 +4,13 @@ import HotSpot from "./hotSpot";
 import {angleIn360, PI2Angle} from "../utils/math";
 import {WebGLRenderingContextWithProgram} from "../types/index";
 import Pano from "./pano";
-import {DefaultFovy, DefaultSceneSwitchDuration, DefaultSceneSwitchFovySpeed, DefaultYRange} from "../config/index";
+import {
+    DefaultFovy,
+    DefaultMovingRate,
+    DefaultSceneSwitchDuration,
+    DefaultSceneSwitchFovySpeed,
+    DefaultYRange
+} from "../config/index";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -302,7 +308,7 @@ export default class Scene {
 
         const deltaYaw = PI2Angle(Math.atan(deltaX / (canvas.width / 2)));
 
-        this.draw(deltaPitch, deltaYaw);
+        this.draw(deltaPitch * DefaultMovingRate, deltaYaw * DefaultMovingRate);
         this.dragStartPoint = {x: targetX, y: targetY};
     }
 
