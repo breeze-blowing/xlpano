@@ -1,7 +1,7 @@
 import {angle2PI, angleIn360} from "../utils/math";
 import Pano from "./pano";
 import Scene from "./scene";
-import {DefaultSceneSwitchDuration} from "../config/index";
+import {DefaultFovy, DefaultSceneSwitchDuration} from "../config/index";
 
 /**
  * 热点
@@ -84,8 +84,9 @@ export default class HotSpot {
      * pitch 的绝对值的正切：y 方向偏移量 / 深度(1)
      * pitch 的绝对值不超过配置的范围
      * deltaTop 的计算结果是归一化的，换算成像素值：* canvas.height / 2
+     * ------ 上面的计算是基于 fovy 是 90 度的情况，当 fovy 非 90 时，需要乘以比例 --------
      * */
-    const deltaTop = Math.tan(angle2PI(Math.abs(this.pitch))) * (container.offsetHeight / 2);
+    const deltaTop = Math.tan(angle2PI(Math.abs(this.pitch))) * (container.offsetHeight / 2) * (90 / DefaultFovy);
     const top = this.pitch > 0 ? centerY - deltaTop : centerY + deltaTop;
     this.dom.style.top = `${top}px`;
 
@@ -98,6 +99,7 @@ export default class HotSpot {
      * (270, 360): tan(360 - yaw) = deltaLeft / 1
      *
      * 横向偏移量还和 canvas 的宽高比还有关系，但是垂直方向的偏移量和宽高比没关系？？？
+     * ------ 上面的计算是基于 fovy 是 90 度的情况，当 fovy 非 90 时，需要乘以比例 --------
      * */
     this.yaw = angleIn360(this.yaw);
     let deltaLeft;
@@ -109,7 +111,7 @@ export default class HotSpot {
       // 直接给一个画布的宽度值，偏移到外面不显示
       deltaLeft = 4;
     }
-    deltaLeft *= (container.offsetWidth / 2) * (offsetHeight / offsetWidth);
+    deltaLeft *= ((container.offsetWidth / 2) * (offsetHeight / offsetWidth) * (90 / DefaultFovy));
     this.dom.style.left = `${centerX + deltaLeft}px`;
   }
 

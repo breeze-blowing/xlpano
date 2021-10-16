@@ -239,6 +239,7 @@ export default class Scene {
                 if (index <= 5) Scene.initTexture(gl, img, index as Unit);
             });
 
+            // 在 render 里面重新绑定事件，其他 scene 的时间都会注销
             // pc 端事件
             canvas.onmousedown = (ev) => {
                 this.dragging = true;
