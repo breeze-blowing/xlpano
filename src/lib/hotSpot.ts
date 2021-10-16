@@ -1,6 +1,7 @@
 import {angle2PI, angleIn360} from "../utils/math";
 import Pano from "./pano";
 import Scene from "./scene";
+import {DefaultSceneSwitchDuration} from "../config/index";
 
 /**
  * 热点
@@ -116,12 +117,10 @@ export default class HotSpot {
    * 点击热点执行函数
    * */
   onClick = () => {
-    // this.pano.switchScene(this.target);
-    const duration = 1000;
-    this.scene.moveToHotSpot(this, duration);
+    this.scene.moveToHotSpot(this);
     setTimeout(() => {
       this.pano.switchScene(this.target);
-    }, duration);
+    }, DefaultSceneSwitchDuration);
   }
 
   /**

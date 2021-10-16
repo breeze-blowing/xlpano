@@ -4,6 +4,7 @@ import HotSpot from "./hotSpot";
 import {angleIn360, PI2Angle} from "../utils/math";
 import {WebGLRenderingContextWithProgram} from "../types/index";
 import Pano from "./pano";
+import {DefaultFovy, DefaultSceneSwitchDuration, DefaultSceneSwitchFovySpeed, DefaultYRange} from "../config/index";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -166,11 +167,11 @@ export default class Scene {
     /**
      * @property {[number, number]} yRange 俯仰可视范围角度
      * */
-    yRange = [-86, 86];
+    yRange = DefaultYRange;
     /**
      * @property {number} fovy 静态可视范围角度
      * */
-    fovy = 90;
+    fovy = DefaultFovy;
     /**
      * 获取 pitch 可移动范围
      * */
@@ -223,6 +224,7 @@ export default class Scene {
     /**
      * 渲染到 pano
      * @param {Pano} pano 父容器
+     * @param {boolean} anim 是否执行入场动画
      * */
     render(pano: Pano) {
         this.pano = pano;
@@ -273,7 +275,7 @@ export default class Scene {
                 if (!this.switching) this.moveTo(targetX, targetY);
             };
 
-            this.draw(0.0, 0.0);
+            this.draw();
         });
     }
 
@@ -309,7 +311,7 @@ export default class Scene {
      * @param deltaPitch {number} 场景的俯仰角偏移值
      * @param deltaYaw {number} 场景的偏航角偏移值
      * */
-    private draw(deltaPitch: number, deltaYaw: number) {
+    private draw(deltaPitch: number = 0, deltaYaw: number = 0) {
         const { gl } = this.pano;
         this.pitch += deltaPitch;
         const PitchRange = this.getPitchRange();
@@ -388,7 +390,7 @@ export default class Scene {
      * @param {HotSpot} hotSpot 目标热点
      * @param {number} duration 持续时间
      * */
-    moveToHotSpot(hotSpot: HotSpot, duration: number) {
+    moveToHotSpot(hotSpot: HotSpot) {
         this.switching = true;
 
         let start = Date.now();
@@ -396,24 +398,21 @@ export default class Scene {
         const totalDeltaPitch = -hotSpot.pitch;
         const totalDeltaYaw = hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw;
 
-        const pitchSpeed = totalDeltaPitch / (duration / 2);
-        const yawSpeed = totalDeltaYaw / (duration / 2);
+        const pitchSpeed = totalDeltaPitch / DefaultSceneSwitchDuration;
+        const yawSpeed = totalDeltaYaw / DefaultSceneSwitchDuration;
 
         const anim = () => {
             requestAnimationFrame(() => {
                 const now = Date.now();
                 const deltaTime = now - start;
-                if (now < startSign + duration / 2) {
+                if (now < startSign + DefaultSceneSwitchDuration) {
+                    this.fovy -= DefaultSceneSwitchFovySpeed;
                     this.draw(pitchSpeed * deltaTime, yawSpeed * deltaTime);
                     start = now;
                     anim();
-                } else if (now < startSign + duration) {
-                    this.fovy -= 1;
-                    this.draw(0, 0);
-                    anim();
                 } else {
                     this.eye.position.z = 0;
-                    this.fovy = 90;
+                    this.fovy = DefaultFovy;
                     this.switching = false;
                 }
             });
