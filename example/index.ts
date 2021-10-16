@@ -86,6 +86,20 @@ function main() {
   pano.addScene(scene1);
   pano.addScene(scene2);
   pano.render();
+
+  // 按钮
+  document.getElementById('getCurrentScene').onclick = () => {
+    const currentScene = pano.getCurrentScene();
+    if (currentScene === scene1) {
+      alert('scene1');
+    } else if (currentScene === scene2) {
+      alert('scene2');
+    } else {
+      alert('没有当前场景');
+    }
+  };
+  document.getElementById('setScene1').onclick = () => pano.setScene(0);
+  document.getElementById('setScene2').onclick = () => pano.setScene(scene2);
 }
 
 window.onload = main;

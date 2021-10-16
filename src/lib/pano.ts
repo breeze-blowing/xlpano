@@ -34,22 +34,21 @@ export default class Pano {
   sceneIndex: number = 0;
 
   /**
-   * @constructor
-   * @param {string} containerId 容器节点id
-   * @param {boolean} debug 是否开启debug
+   * 是否已经渲染
    * */
-  constructor(containerId: string, debug?: boolean) {
-    const container = document.getElementById(containerId);
-    if (!container) {
-      throw new Error('找不到容器，请确认 id 是否正确');
-    }
+  rendered = false;
+
+  /**
+   * 设置样式
+   * */
+  setStyle() {
+    const { container, canvas } = this;
     container.style.overflow = 'hidden';
     // 如果 container 的 position 不是 absolute 和 fixed，则统一设置成 relative
     const containerPosition = container.style.position;
     if (containerPosition !== 'absolute' && containerPosition !== 'fixed') {
       container.style.position = 'relative';
     }
-    const canvas = document.createElement('canvas');
 
     // 开启 HiDPI
     const desiredCSSWidth = container.offsetWidth;
@@ -61,13 +60,45 @@ export default class Pano {
     canvas.style.height = desiredCSSHeight + "px";
 
     canvas.style.cursor = 'grab';
+  }
 
+  /**
+   * todo container 尺寸变化监听，重新渲染
+   * */
+  /*onContainerResize() {
+    if (ResizeObserver) {
+      const observer = new ResizeObserver(() => {
+        if (this.rendered) {
+          this.setStyle();
+          this.render();
+        }
+      });
+      observer.observe(this.container);
+    }
+  }*/
+
+  /**
+   * @constructor
+   * @param {string} containerId 容器节点id
+   * @param {boolean} debug 是否开启debug
+   * */
+  constructor(containerId: string, debug?: boolean) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+      throw new Error('找不到容器，请确认 id 是否正确');
+    }
+    this.container = container;
+
+    const canvas = document.createElement('canvas');
+    this.canvas = canvas;
     container.append(canvas);
 
-    this.container = container;
-    this.canvas = canvas;
+    this.setStyle();
+
     this.gl = getWebGLContext(canvas, debug);
     initShaders(this.gl, VertShader, FragShader);
+
+    // this.onContainerResize();
   }
 
   /**
@@ -83,6 +114,7 @@ export default class Pano {
    * @param {number} sceneIndex 切换后的场景
    * */
   switchScene = (sceneIndex: number) => {
+    if (sceneIndex === this.sceneIndex) return;
     const currentScene = this.scenes[this.sceneIndex];
     if (currentScene) currentScene.destroy();
     this.sceneIndex = sceneIndex;
@@ -101,5 +133,33 @@ export default class Pano {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
     currentScene.render(this);
+    this.rendered = true;
+  }
+
+  /**
+   * 获取当前场景索引
+   * @return {Scene} 当前场景
+   * */
+  getCurrentScene(): Scene {
+    return this.scenes[this.sceneIndex];
+  }
+
+  /**
+   * 设置当前场景
+   * @param {Scene | number} scene 场景实例，或者场景索引
+   * */
+  setScene(scene: Scene | number) {
+    if (typeof scene === 'number') {
+      if (scene < 0 || scene > this.scenes.length - 1) {
+        throw new Error('场景索引超出范围');
+      }
+      this.switchScene(scene);
+    } else {
+      const index = this.scenes.indexOf(scene);
+      if (index === -1) {
+        throw new Error('场景不存在');
+      }
+      this.switchScene(index);
+    }
   }
 }

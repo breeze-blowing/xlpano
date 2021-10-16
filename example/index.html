@@ -17,6 +17,11 @@
 </head>
 <body>
 <div id="containerId" style="width: 100vw; height: 100vh;"></div>
+<div style="position: absolute; top: 10px; left: 10px">
+    <button id="getCurrentScene">当前场景缩影</button>
+    <button id="setScene1" style="margin-left: 20px">设置场景1</button>
+    <button id="setScene2" style="margin-left: 20px">设置场景2</button>
+</div>
 <script>
     document.body.addEventListener('touchmove', function (e) {
         e.preventDefault(); //阻止默认的处理方式(阻止下拉滑动的效果)
