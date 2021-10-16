@@ -307,7 +307,6 @@ export default class Scene {
         }
 
         const deltaYaw = PI2Angle(Math.atan(deltaX / (canvas.width / 2)));
-
         this.draw(deltaPitch * DefaultMovingRate, deltaYaw * DefaultMovingRate);
         this.dragStartPoint = {x: targetX, y: targetY};
     }

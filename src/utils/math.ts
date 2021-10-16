@@ -24,5 +24,5 @@ export function angle2PI(angle: number): number {
  * @return {number} 转换后的角度
  * */
 export function PI2Angle(pi: number): number {
-  return Math.round(pi / (2 * Math.PI / 360));
+  return pi / (2 * Math.PI / 360);
 }
