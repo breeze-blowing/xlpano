@@ -4,6 +4,12 @@ import FragShader from '../shader/index.frag';
 import Scene from './scene';
 import {WebGLRenderingContextWithProgram} from "../types/index";
 
+type SceneChangeCallback = (scene: Scene, index: number) => void;
+
+type ListenerType = 'sceneChange';
+
+type ListenerCallback = SceneChangeCallback;
+
 /**
  * 容器
  * */
@@ -102,6 +108,41 @@ export default class Pano {
   }
 
   /**
+   * 场景变化的回调函数
+   * */
+  sceneChangeCallbacks: SceneChangeCallback[] = [];
+  /**
+   * 添加回调函数
+   * */
+  addListener(type: ListenerType, callback: ListenerCallback) {
+    switch (type) {
+      case "sceneChange":
+        this.sceneChangeCallbacks.push(callback);
+        break;
+      default:
+        break;
+    }
+  }
+  /**
+   * 移除监听
+   * */
+  removeListener(type: ListenerType, callback: ListenerCallback) {
+    switch (type) {
+      case "sceneChange":
+        this.sceneChangeCallbacks = this.sceneChangeCallbacks.filter(item => item !== callback);
+        break;
+      default:
+        break;
+    }
+  }
+  /**
+   * 移除所有监听
+   * */
+  removeAllListeners() {
+    this.sceneChangeCallbacks = [];
+  }
+
+  /**
    * 添加场景
    * @param {Scene} scene 场景
    * */
@@ -119,6 +160,10 @@ export default class Pano {
     if (currentScene) currentScene.destroy();
     this.sceneIndex = sceneIndex;
     this.render();
+    // 执行回调
+    this.sceneChangeCallbacks.forEach(callback => {
+      callback(this.scenes[this.sceneIndex], this.sceneIndex);
+    });
   }
 
   /**

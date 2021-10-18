@@ -100,6 +100,20 @@ function main() {
   };
   document.getElementById('setScene1').onclick = () => pano.setScene(0);
   document.getElementById('setScene2').onclick = () => pano.setScene(scene2);
+
+  const onSceneChange = (scene: Scene, index: number) => {
+    document.getElementById('showCurrentScene').innerText = `当前场景：scene${index + 1}`;
+  };
+
+  document.getElementById('addListener').onclick = () => {
+    pano.addListener('sceneChange', onSceneChange);
+    document.getElementById('showCurrentScene').innerText = '切换后显示当前场景';
+  };
+
+  document.getElementById('removeListener').onclick = () => {
+    pano.removeListener('sceneChange', onSceneChange);
+    document.getElementById('showCurrentScene').innerText = '当前场景：';
+  };
 }
 
 window.onload = main;
