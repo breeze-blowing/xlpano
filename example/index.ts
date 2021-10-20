@@ -130,6 +130,10 @@ function main() {
     const currentScene = pano.getCurrentScene();
     currentScene.setAngle({ pitch: 30, yaw: 45 });
   }
+  document.getElementById('setAngleAnim').onclick = () => {
+    const currentScene = pano.getCurrentScene();
+    currentScene.setAngle({ pitch: 30, yaw: 45 }, { animation: true });
+  }
 
   const onAngleChange = (angle: SceneAngle) => {
     document.getElementById('showCurrentAngle').innerText = `pitch：${angle.pitch.toFixed(2)}；yaw：${angle.yaw.toFixed(2)}`;

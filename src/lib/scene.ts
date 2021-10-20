@@ -356,6 +356,44 @@ export default class Scene {
         this.dragStartPoint = {x: targetX, y: targetY};
     }
 
+    // 移动某个角度偏移量 - 可同步移动 fovy
+    moveToAngle(deltaPitch: number, deltaYaw: number, options: {
+        animation?: boolean,
+        fovyChange?: boolean,
+        // 动画执行完毕后的回调
+        callback?: () => void,
+    } = {}) {
+        const { animation = false, fovyChange = false, callback } = options;
+        if (animation) {
+            this.switching = true;
+
+            const pitchSpeed = deltaPitch / DefaultSceneSwitchDuration;
+            const yawSpeed = deltaYaw / DefaultSceneSwitchDuration;
+
+            let start = Date.now();
+            const startSign = start;
+
+            const anim = () => {
+                requestAnimationFrame(() => {
+                    const now = Date.now();
+                    const deltaTime = now - start;
+                    if (now < startSign + DefaultSceneSwitchDuration) {
+                        if (fovyChange) this.fovy -= DefaultSceneSwitchFovySpeed;
+                        this.draw(pitchSpeed * deltaTime, yawSpeed * deltaTime);
+                        start = now;
+                        anim();
+                    } else {
+                        this.switching = false;
+                        if (callback) callback();
+                    }
+                });
+            };
+            anim();
+        } else {
+            this.draw(deltaPitch, deltaYaw);
+        }
+    }
+
     /**
      * 绘制变换后的场景和热点
      * @param deltaPitch {number} 场景的俯仰角偏移值
@@ -443,7 +481,7 @@ export default class Scene {
      * @param {HotSpot} hotSpot 目标热点
      * */
     moveToHotSpot(hotSpot: HotSpot) {
-        this.switching = true;
+        /*this.switching = true;
 
         let start = Date.now();
         const startSign = start;
@@ -463,13 +501,18 @@ export default class Scene {
                     start = now;
                     anim();
                 } else {
-                    this.eye.position.z = 0;
+                    // this.eye.position.z = 0;
                     this.fovy = DefaultFovy;
                     this.switching = false;
                 }
             });
         };
-        anim();
+        anim();*/
+        this.moveToAngle(-hotSpot.pitch, hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw, {
+            animation: true,
+            fovyChange: true,
+            callback: () => this.fovy = DefaultFovy,
+        });
     }
 
     /**
@@ -489,10 +532,9 @@ export default class Scene {
     }
 
     // 设置角度
-    setAngle(angle: SceneAngle, options?: { animation?: boolean }) {
+    setAngle(angle: SceneAngle, options: { animation?: boolean } = {}) {
         const { pitch: targetPitch, yaw: targetYaw } = angle;
-        if (!options) options = {};
         const { animation = false } = options;
-        this.draw(targetPitch - this.pitch, targetYaw - this.yaw);
+        this.moveToAngle(targetPitch - this.pitch, targetYaw - this.yaw, { animation });
     }
 }
