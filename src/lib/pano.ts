@@ -3,6 +3,7 @@ import VertShader from '../shader/index.vert';
 import FragShader from '../shader/index.frag';
 import Scene from './scene';
 import {WebGLRenderingContextWithProgram} from "../types/index";
+import {loadPanoTexImage} from "./resource";
 
 type SceneChangeCallback = (scene: Scene, index: number) => void;
 
@@ -170,6 +171,8 @@ export default class Pano {
    * 渲染当前 Scene 到 canvas
    * */
   render() {
+    // 加载纹理
+    loadPanoTexImage(this);
     const currentScene = this.scenes[this.sceneIndex];
     if (!currentScene) {
       throw new Error('当前场景不存在');

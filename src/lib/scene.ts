@@ -11,6 +11,7 @@ import {
     DefaultSceneSwitchFovySpeed,
     DefaultYRange
 } from "../config/index";
+import {getTexImageSource} from "./resource";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -432,7 +433,8 @@ export default class Scene {
     private loadTextures(): Promise<TexImageSource[]> {
         // 交换前后，左右
         const [f, r, u, l, d, b] = this.textures;
-        return Promise.all([b, r, u, l, d, f].map(texture => loadImage(texture)));
+        return getTexImageSource([b, r, u, l, d, f]);
+        // return Promise.all([b, r, u, l, d, f].map(texture => getTexImageSource(texture)));
     }
 
     /**
