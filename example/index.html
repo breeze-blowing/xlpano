@@ -22,9 +22,16 @@
     <button id="setScene1" style="margin-left: 20px">设置场景1</button>
     <button id="setScene2" style="margin-left: 20px">设置场景2</button>
     <br/><br/>
-    <button id="addListener">添加监听</button>
+    <button id="addListener">场景切换监听</button>
     <button id="removeListener" style="margin-left: 20px">移除监听</button>
     <button id="showCurrentScene" style="margin-left: 20px">当前场景：</button>
+    <br/><br/>
+    <button id="getAngle">弹出当前场景角度</button>
+    <button id="setAngle" style="margin-left: 20px">设置角度：pitch:30 - yaw: 45</button>
+    <br/><br/>
+    <button id="addAngleListener">角度变化监听</button>
+    <button id="removeAngleListener" style="margin-left: 20px">移除监听</button>
+    <button id="showCurrentAngle" style="margin-left: 20px">当前角度：</button>
 </div>
 <script>
     document.body.addEventListener('touchmove', function (e) {

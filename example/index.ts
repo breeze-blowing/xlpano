@@ -15,6 +15,7 @@ import r_r from './assets/restroom/r.jpg';
 import r_u from './assets/restroom/u.jpg';
 
 import arrow from './assets/hotSpot/arrow.png';
+import {SceneAngle} from "../src/lib/scene";
 
 /**
  * 动态插入热点箭头图片动画样式文件
@@ -98,8 +99,12 @@ function main() {
       alert('没有当前场景');
     }
   };
-  document.getElementById('setScene1').onclick = () => pano.setScene(0);
-  document.getElementById('setScene2').onclick = () => pano.setScene(scene2);
+  document.getElementById('setScene1').onclick = () => {
+    pano.setScene(0);
+  }
+  document.getElementById('setScene2').onclick = () => {
+    pano.setScene(scene2);
+  }
 
   const onSceneChange = (scene: Scene, index: number) => {
     document.getElementById('showCurrentScene').innerText = `当前场景：scene${index + 1}`;
@@ -113,6 +118,33 @@ function main() {
   document.getElementById('removeListener').onclick = () => {
     pano.removeListener('sceneChange', onSceneChange);
     document.getElementById('showCurrentScene').innerText = '当前场景：';
+  };
+
+  document.getElementById('getAngle').onclick = () => {
+    const currentScene = pano.getCurrentScene();
+    const angle = currentScene.getAngle();
+    alert(`pitch: ${angle.pitch.toFixed(2)}；yaw: ${angle.yaw.toFixed(2)}`);
+  };
+
+  document.getElementById('setAngle').onclick = () => {
+    const currentScene = pano.getCurrentScene();
+    currentScene.setAngle({ pitch: 30, yaw: 45 });
+  }
+
+  const onAngleChange = (angle: SceneAngle) => {
+    document.getElementById('showCurrentAngle').innerText = `pitch：${angle.pitch.toFixed(2)}；yaw：${angle.yaw.toFixed(2)}`;
+  };
+
+  document.getElementById('addAngleListener').onclick = () => {
+    scene1.addListener('angleChange', onAngleChange);
+    scene2.addListener('angleChange', onAngleChange);
+    document.getElementById('showCurrentAngle').innerText = '移动切换后显示角度';
+  };
+
+  document.getElementById('removeAngleListener').onclick = () => {
+    scene1.removeListener('angleChange', onAngleChange);
+    scene2.removeListener('angleChange', onAngleChange);
+    document.getElementById('showCurrentAngle').innerText = '当前角度：';
   };
 }
 

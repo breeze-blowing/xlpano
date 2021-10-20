@@ -74,10 +74,10 @@ export default class HotSpot {
     const centerX = (container.offsetWidth - width) / 2;
     const centerY = (container.offsetHeight - height) / 2;
 
+    const { offsetWidth, offsetHeight } = container;
+
     this.pitch += deltaPitch;
     this.yaw -= deltaYaw;
-
-    const { offsetWidth, offsetHeight } = container;
 
     /**
      * tan(|pitch|) = deltaTop / 1

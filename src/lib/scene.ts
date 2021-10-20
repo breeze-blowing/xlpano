@@ -17,6 +17,16 @@ import {
  * */
 type Unit = 0 | 1 | 2 | 3 | 4 | 5;
 
+// 场景角度
+export interface SceneAngle {
+    pitch: number,
+    yaw: number,
+}
+
+type SceneAngleChangeCallback = (angle: SceneAngle) => void;
+
+type SceneListenerType = 'angleChange';
+
 /**
  * 场景类，提供全景画面
  * 立方体
@@ -212,6 +222,41 @@ export default class Scene {
     pano: Pano;
 
     /**
+     * 角度变化回调函数
+     * */
+    angleChangeCallbacks: SceneAngleChangeCallback[] = [];
+    /**
+     * 添加回调函数
+     * */
+    addListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
+        switch (type) {
+            case "angleChange":
+                this.angleChangeCallbacks.push(callback);
+                break;
+            default:
+                break;
+        }
+    }
+    /**
+     * 移除监听
+     * */
+    removeListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
+        switch (type) {
+            case "angleChange":
+                this.angleChangeCallbacks = this.angleChangeCallbacks.filter(item => item !== callback);
+                break;
+            default:
+                break;
+        }
+    }
+    /**
+     * 移除所有监听
+     * */
+    removeAllListeners() {
+        this.angleChangeCallbacks = [];
+    }
+
+    /**
      * @constructor 构造函数
      * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
@@ -337,6 +382,9 @@ export default class Scene {
         if (this.hotSpots && this.hotSpots.length) {
             this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, this.pano, this));
         }
+
+        // 执行回调
+        this.angleChangeCallbacks.forEach(callback => callback({ pitch: this.pitch, yaw: this.yaw }));
     }
 
     /**
@@ -430,5 +478,21 @@ export default class Scene {
     destroy() {
         // 移除热点
         if (this.hotSpots && this.addHotSpots.length) this.hotSpots.forEach(hotSpot => hotSpot.destroy());
+    }
+
+    // 获取当前角度
+    getAngle(): SceneAngle {
+        return {
+            pitch: this.pitch,
+            yaw: this.yaw,
+        }
+    }
+
+    // 设置角度
+    setAngle(angle: SceneAngle, options?: { animation?: boolean }) {
+        const { pitch: targetPitch, yaw: targetYaw } = angle;
+        if (!options) options = {};
+        const { animation = false } = options;
+        this.draw(targetPitch - this.pitch, targetYaw - this.yaw);
     }
 }
