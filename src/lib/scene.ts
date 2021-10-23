@@ -2,7 +2,7 @@ import {initArrayBuffer, loadImage} from "../utils/process";
 import Matrix4 from "../utils/matrix";
 import HotSpot from "./hotSpot";
 import {angleIn360, PI2Angle} from "../utils/math";
-import {WebGLRenderingContextWithProgram} from "../types/index";
+import {TextureSource, WebGLRenderingContextWithProgram} from "../types/index";
 import Pano from "./pano";
 import {
     DefaultFovy,
@@ -159,7 +159,7 @@ export default class Scene {
     /**
      * @property {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
-    textures: string[] = [];
+    textures: TextureSource[] = [];
 
     /**
      * @property {number} pitch 俯仰角-绕 x 轴旋转角度
@@ -261,8 +261,14 @@ export default class Scene {
      * @constructor 构造函数
      * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
-    constructor(textures: string[]) {
+    constructor(textures: TextureSource[]) {
         this.textures = textures;
+    }
+
+    // 更改纹理重新渲染，按照 f r u l d b 的顺序
+    replaceTextures(textures: TextureSource[]) {
+        this.textures = textures;
+        this.render(this.pano);
     }
 
     addHotSpots(hotSpots: HotSpot | HotSpot[]) {
@@ -433,7 +439,28 @@ export default class Scene {
     private loadTextures(): Promise<TexImageSource[]> {
         // 交换前后，左右
         const [f, r, u, l, d, b] = this.textures;
-        return getTexImageSource([b, r, u, l, d, f]);
+        const sourceOrder = [b, r, u, l, d, f];
+        // 删选出资源地址类型的，然后加载图片
+        const srcSources: { src: string, index: number }[] = [];
+        sourceOrder.forEach((source, index) => {
+            if (typeof source === 'string') {
+                srcSources.push({
+                    src: source,
+                    index,
+                });
+            }
+        });
+        return getTexImageSource(srcSources.map(item => item.src)).then(images => {
+            // 拼接返回所有的 TexImageSource 类型
+            return sourceOrder.map(source => {
+                if (typeof source === 'string') {
+                    return images.shift();
+                } else {
+                    return source;
+                }
+            });
+        })
+        // return getTexImageSource([b, r, u, l, d, f]);
         // return Promise.all([b, r, u, l, d, f].map(texture => getTexImageSource(texture)));
     }
 

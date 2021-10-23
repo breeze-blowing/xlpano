@@ -4,3 +4,8 @@
 export interface WebGLRenderingContextWithProgram extends WebGLRenderingContext {
   program?: WebGLProgram
 }
+
+/**
+ * 纹理资源：可以是图像或者资源地址
+ * */
+export type TextureSource = TexImageSource | string;

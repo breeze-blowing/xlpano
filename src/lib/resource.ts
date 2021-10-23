@@ -40,7 +40,7 @@ export async function loadPanoTexImage(pano: Pano) {
     let firstNeighborTextures: string[] = [];
     firstNeighborIndex.forEach(neighborIndex => {
       const neighborScene = scenes[neighborIndex];
-      if (neighborScene) firstNeighborTextures = firstNeighborTextures.concat(neighborScene.textures);
+      if (neighborScene) firstNeighborTextures = firstNeighborTextures.concat(filterSceneSrcTex(neighborScene));
     })
     loadTexImages(firstNeighborTextures);
     // 已经加载完成的索引列表
@@ -50,7 +50,7 @@ export async function loadPanoTexImage(pano: Pano) {
     scenes.forEach((_, index) => {
       if (!alreadyLoadedSceneIndex.includes(index)) {
         const otherScene = scenes[index];
-        if (otherScene) otherSceneTextures = otherSceneTextures.concat(otherScene.textures);
+        if (otherScene) otherSceneTextures = otherSceneTextures.concat(filterSceneSrcTex(otherScene));
       }
     });
     loadTexImages(otherSceneTextures);
@@ -58,7 +58,7 @@ export async function loadPanoTexImage(pano: Pano) {
 }
 
 function loadOneSceneTexImage(scene: Scene): Promise<void> {
-  return loadTexImages(scene.textures);
+  return loadTexImages(filterSceneSrcTex(scene));
 }
 
 function loadTexImages(images: string[]): Promise<void> {
@@ -67,4 +67,9 @@ function loadTexImages(images: string[]): Promise<void> {
       ImageResource[src] = results[index];
     });
   });
+}
+
+// 过滤一个场景中资源地址类型的纹理
+function filterSceneSrcTex(scene: Scene): string[] {
+  return scene.textures.filter(item => typeof item === 'string') as string[];
 }

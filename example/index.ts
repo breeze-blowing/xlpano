@@ -150,6 +150,23 @@ function main() {
     scene2.removeListener('angleChange', onAngleChange);
     document.getElementById('showCurrentAngle').innerText = '当前角度：';
   };
+
+  const replaceTexture = (sources: string[]) => {
+    function loadImage(src: string): Promise<TexImageSource> {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => resolve(image);
+        image.onerror = error => reject(error);
+        image.src = src;
+      });
+    }
+
+    Promise.all(sources.map(src => loadImage(src))).then(images => scene1.replaceTextures(images));
+  };
+
+  document.getElementById('replaceTexture').onclick = () => replaceTexture([r_f, r_r, r_u, r_l, r_d, r_b]);
+  document.getElementById('replaceTextureBack').onclick = () => replaceTexture([b_f, b_r, b_u, b_l, b_d, b_b]);
 }
 
 window.onload = main;
