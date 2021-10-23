@@ -1,7 +1,7 @@
 # XLPano 全景引擎
 
 ## 介绍
-XLPano 是一个轻量的全景开源库。
+XLPano 是一个基于 Typescript 的轻量的全景开源库。
 
 ## 安装
 本库提供了直接使用 `<scrpit>` 标签引入方式和 `npm` 包两种方式

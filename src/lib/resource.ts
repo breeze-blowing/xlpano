@@ -22,6 +22,7 @@ export async function getTexImageSource(sources: string[]): Promise<TexImageSour
   return result;
 }
 
+// 加载整个 pano 的纹理图，首个场景加载完就放行
 export async function loadPanoTexImage(pano: Pano) {
   const scenes = pano.scenes;
   if (scenes.length > 0) {
@@ -41,7 +42,7 @@ export async function loadPanoTexImage(pano: Pano) {
       const neighborScene = scenes[neighborIndex];
       if (neighborScene) firstNeighborTextures = firstNeighborTextures.concat(neighborScene.textures);
     })
-    await loadTexImages(firstNeighborTextures);
+    loadTexImages(firstNeighborTextures);
     // 已经加载完成的索引列表
     const alreadyLoadedSceneIndex = firstNeighborIndex.concat([0]);
     // 其他场景纹理图片
@@ -52,7 +53,7 @@ export async function loadPanoTexImage(pano: Pano) {
         if (otherScene) otherSceneTextures = otherSceneTextures.concat(otherScene.textures);
       }
     });
-    await loadTexImages(otherSceneTextures);
+    loadTexImages(otherSceneTextures);
   }
 }
 

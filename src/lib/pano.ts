@@ -171,17 +171,23 @@ export default class Pano {
    * 渲染当前 Scene 到 canvas
    * */
   render() {
-    // 加载纹理
-    loadPanoTexImage(this);
-    const currentScene = this.scenes[this.sceneIndex];
-    if (!currentScene) {
-      throw new Error('当前场景不存在');
+    const renderScene = () => {
+      const currentScene = this.scenes[this.sceneIndex];
+      if (!currentScene) {
+        throw new Error('当前场景不存在');
+      }
+      const gl = this.gl;
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.enable(gl.DEPTH_TEST);
+      currentScene.render(this);
+      this.rendered = true;
+    };
+    if (!this.rendered) {
+      // 先加载纹理
+      loadPanoTexImage(this).then(renderScene);
+    } else {
+      renderScene();
     }
-    const gl = this.gl;
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
-    currentScene.render(this);
-    this.rendered = true;
   }
 
   /**
