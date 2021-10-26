@@ -1,4 +1,4 @@
-import { Pano, Scene, HotSpot } from '../src/index';
+import { Pano, CubeScene, HotSpot } from '../src/index';
 
 import b_b from './assets/bedroom/b.jpg';
 import b_d from './assets/bedroom/d.jpg';
@@ -15,7 +15,7 @@ import r_r from './assets/restroom/r.jpg';
 import r_u from './assets/restroom/u.jpg';
 
 import arrow from './assets/hotSpot/arrow.png';
-import {SceneAngle} from "../src/lib/scene";
+import {SceneAngle} from "../src/lib/interface/Scene";
 
 /**
  * 动态插入热点箭头图片动画样式文件
@@ -73,13 +73,13 @@ function main() {
 
   const pano = new Pano('containerId', true);
 
-  const scene1 = new Scene([b_f, b_r, b_u, b_l, b_d, b_b]);
+  const scene1 = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b]);
 
   const s1HotSpot = new HotSpot(createHotSpotDom('卫生间'), 1, { pitch: -10, yaw: 55 });
 
   scene1.addHotSpots([s1HotSpot]);
 
-  const scene2 = new Scene([r_f, r_r, r_u, r_l, r_d, r_b]);
+  const scene2 = new CubeScene([r_f, r_r, r_u, r_l, r_d, r_b]);
   const s2HotSpot = new HotSpot(createHotSpotDom('主卧'), 0, { pitch: -10, yaw: 10 });
 
   scene2.addHotSpots(s2HotSpot);
@@ -106,7 +106,7 @@ function main() {
     pano.setScene(scene2);
   }
 
-  const onSceneChange = (scene: Scene, index: number) => {
+  const onSceneChange = (scene: CubeScene, index: number) => {
     document.getElementById('showCurrentScene').innerText = `当前场景：scene${index + 1}`;
   };
 

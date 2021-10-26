@@ -1,3 +1,3 @@
-export {default as Pano} from './lib/pano';
-export {default as Scene} from './lib/scene';
-export {default as HotSpot} from './lib/hotSpot';
+export {default as Pano} from './lib/Pano';
+export {default as CubeScene} from './lib/CubeScene';
+export {default as HotSpot} from './lib/HotSpot';

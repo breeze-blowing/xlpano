@@ -4,8 +4,8 @@
  * 2. 和第一个场景关联的场景
  * 3. 其他场景
  * */
-import Pano from "./pano";
-import Scene from "./scene";
+import Pano from "./Pano";
+import Scene from "./interface/Scene";
 import {loadImage} from "../utils/process";
 
 const ImageResource: {[keu: string]: TexImageSource} = {};
@@ -71,5 +71,9 @@ function loadTexImages(images: string[]): Promise<void> {
 
 // 过滤一个场景中资源地址类型的纹理
 function filterSceneSrcTex(scene: Scene): string[] {
-  return scene.textures.filter(item => typeof item === 'string') as string[];
+  if (scene.textures instanceof Array) {
+    return scene.textures.filter(item => typeof item === 'string') as string[];
+  } else {
+    return typeof scene.textures === 'string' ? [scene.textures] : [];
+  }
 }

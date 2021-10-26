@@ -1,7 +1,7 @@
 import {angle2PI, angleIn360} from "../utils/math";
-import Pano from "./pano";
-import Scene from "./scene";
-import {DefaultFovy, DefaultSceneSwitchDuration} from "../config/index";
+import Pano from "./Pano";
+import Scene from "./interface/Scene";
+import {DefaultFovy} from "../config/index";
 
 /**
  * 热点
@@ -119,10 +119,7 @@ export default class HotSpot {
    * 点击热点执行函数
    * */
   onClick = () => {
-    this.scene.moveToHotSpot(this);
-    setTimeout(() => {
-      this.pano.switchScene(this.target);
-    }, DefaultSceneSwitchDuration);
+    this.scene.onHotSpotClick(this);
   }
 
   /**

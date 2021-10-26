@@ -12,16 +12,16 @@ XLPano 是一个基于 Typescript 的轻量的全景开源库。
 
 ## 使用
 本库提供了三个关键的类，完成全景的搭建。
-1. 引入 Pano, Scene, HotSpot
+1. 引入 Pano, CubeScene, HotSpot
 ```
 // 全局变量方式引入
-const { Pano, Scene, HotSpot } = window.XLPano;
+const { Pano, CubeScene, HotSpot } = window.XLPano;
 
 // ES6 module 方式引入
-import { Pano, Scene, HotSpot } from 'xl-pano';
+import { Pano, CubeScene, HotSpot } from 'xl-pano';
 
 // CommonJS 方式引入
-const { Pano, Scene, HotSpot } = require('xl-pano');
+const { Pano, CubeScene, HotSpot } = require('xl-pano');
 ```
 2. 构建全景
 ```
@@ -29,7 +29,7 @@ const { Pano, Scene, HotSpot } = require('xl-pano');
 const pano = new Pano('containerId');
 
 // 创建 scene，立方体贴图按照[前, 右, 上, 左, 下, 后]的顺序添加
-const scene = new Scene([f, r, u, l, d, b]);
+const scene = new CubeScene([f, r, u, l, d, b]);
 // 创建 hotSpot，传入热点元素，目标场景索引，俯仰角，偏航角
 const hotSpot = new HotSpot(HtmlElement, 1, { pitch: -10, yaw: 55 });
 

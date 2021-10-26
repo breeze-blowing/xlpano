@@ -1,9 +1,9 @@
-import {initArrayBuffer, loadImage} from "../utils/process";
+import {initArrayBuffer} from "../utils/process";
 import Matrix4 from "../utils/matrix";
-import HotSpot from "./hotSpot";
+import HotSpot from "./HotSpot";
 import {angleIn360, PI2Angle} from "../utils/math";
 import {TextureSource, WebGLRenderingContextWithProgram} from "../types/index";
-import Pano from "./pano";
+import Pano from "./Pano";
 import {
     DefaultFovy,
     DefaultMovingRate,
@@ -12,21 +12,12 @@ import {
     DefaultYRange
 } from "../config/index";
 import {getTexImageSource} from "./resource";
+import Scene, {SceneAngle, SceneAngleChangeCallback, SceneListenerType} from "./interface/Scene";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
  * */
 type Unit = 0 | 1 | 2 | 3 | 4 | 5;
-
-// 场景角度
-export interface SceneAngle {
-    pitch: number,
-    yaw: number,
-}
-
-type SceneAngleChangeCallback = (angle: SceneAngle) => void;
-
-type SceneListenerType = 'angleChange';
 
 /**
  * 场景类，提供全景画面
@@ -39,7 +30,7 @@ type SceneListenerType = 'angleChange';
  *  |/      |/
  *  v2------v3
  * */
-export default class Scene {
+export default class CubeScene implements Scene {
 
     /**
      * @static {Float32Array} vertices 立方体顶点坐标
@@ -145,30 +136,25 @@ export default class Scene {
      * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
      * @return {WebGLUniformLocation} u_Face 地址
      * */
-    getUFaceLocation(gl: WebGLRenderingContextWithProgram): WebGLUniformLocation {
-        if (!Scene.u_Face) {
+    static getUFaceLocation(gl: WebGLRenderingContextWithProgram): WebGLUniformLocation {
+        if (!CubeScene.u_Face) {
             const u_Face = gl.getUniformLocation(gl.program, 'u_Face');
             if (!u_Face) {
                 throw new Error('获取 u_Face 地址失败');
             }
-            Scene.u_Face = u_Face;
+            CubeScene.u_Face = u_Face;
         }
-        return Scene.u_Face;
+        return CubeScene.u_Face;
     }
-
-    /**
-     * @property {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
-     * */
-    textures: TextureSource[] = [];
 
     /**
      * @property {number} pitch 俯仰角-绕 x 轴旋转角度
      * */
-    pitch = 0.0;
+    private pitch = 0.0;
     /**
      * @property {number} yaw 偏航角-绕 y 轴旋转角度
      * */
-    yaw = 0.0;
+    private yaw = 0.0;
 
     /**
      * 视点参数
@@ -176,7 +162,7 @@ export default class Scene {
      * target: 视线方向
      * up: 上方向
      * */
-    eye = {
+    private eye = {
         position: { x: 0.0, y: 0.0, z: 0.0 },
         target: { x: 0.0, y: 0.0, z: -1.0 },
         up: { x: 0.0, y: 1.0, z: 0.0 },
@@ -184,15 +170,15 @@ export default class Scene {
     /**
      * @property {[number, number]} yRange 俯仰可视范围角度
      * */
-    yRange = DefaultYRange;
+    private yRange = DefaultYRange;
     /**
      * @property {number} fovy 静态可视范围角度
      * */
-    fovy = DefaultFovy;
+    private fovy = DefaultFovy;
     /**
      * 获取 pitch 可移动范围
      * */
-    getPitchRange() {
+    private getPitchRange() {
         const fovyHalf = this.fovy / 2;
         return [this.yRange[0] + fovyHalf, this.yRange[1] - fovyHalf];
     }
@@ -201,61 +187,21 @@ export default class Scene {
      * @property {boolean} dragging 是否正在被拖拽
      * 鼠标按下置为 true；鼠标释放置为 false
      * */
-    dragging = false;
+    private dragging = false;
     /**
      * @property {{x: number, y: number}} dragStartPoint 开始拖拽的起点
      * */
-    dragStartPoint = { x: 0, y: 0 };
-
-    /**
-     * @property {HotSpot[]} hotSpots 热点
-     * */
-    hotSpots: HotSpot[] = [];
+    private dragStartPoint = { x: 0, y: 0 };
 
     /**
      * @property {boolean} switching 是否正在进行转场
      * */
-    switching = false;
+    private switching = false;
 
     /**
      * @property {Pano} pano 父容器Pano
      * */
-    pano: Pano;
-
-    /**
-     * 角度变化回调函数
-     * */
-    angleChangeCallbacks: SceneAngleChangeCallback[] = [];
-    /**
-     * 添加回调函数
-     * */
-    addListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
-        switch (type) {
-            case "angleChange":
-                this.angleChangeCallbacks.push(callback);
-                break;
-            default:
-                break;
-        }
-    }
-    /**
-     * 移除监听
-     * */
-    removeListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
-        switch (type) {
-            case "angleChange":
-                this.angleChangeCallbacks = this.angleChangeCallbacks.filter(item => item !== callback);
-                break;
-            default:
-                break;
-        }
-    }
-    /**
-     * 移除所有监听
-     * */
-    removeAllListeners() {
-        this.angleChangeCallbacks = [];
-    }
+    private pano: Pano;
 
     /**
      * @constructor 构造函数
@@ -263,78 +209,6 @@ export default class Scene {
      * */
     constructor(textures: TextureSource[]) {
         this.textures = textures;
-    }
-
-    // 更改纹理重新渲染，按照 f r u l d b 的顺序
-    replaceTextures(textures: TextureSource[]) {
-        this.textures = textures;
-        this.render(this.pano);
-    }
-
-    addHotSpots(hotSpots: HotSpot | HotSpot[]) {
-        if (hotSpots instanceof Array) {
-            this.hotSpots = this.hotSpots.concat(hotSpots);
-        } else {
-            this.hotSpots.push(hotSpots);
-        }
-    }
-
-    /**
-     * 渲染到 pano
-     * @param {Pano} pano 父容器
-     * */
-    render(pano: Pano) {
-        this.pano = pano;
-
-        const { gl, canvas } = this.pano;
-
-        initArrayBuffer(gl, Scene.vertices, 3, gl.FLOAT, 'a_Position');
-        initArrayBuffer(gl, Scene.texs, 2, gl.FLOAT, 'a_TexCoord');
-
-        this.loadTextures().then((images) => {
-            // [imgF, imgR, imgU, imgL, imgD, imgB]
-            images.forEach((img, index) => {
-                if (index <= 5) Scene.initTexture(gl, img, index as Unit);
-            });
-
-            // 在 render 里面重新绑定事件，其他 scene 的时间都会注销
-            // pc 端事件
-            canvas.onmousedown = (ev) => {
-                this.dragging = true;
-                canvas.style.cursor = 'grabbing';
-                this.dragStartPoint = {
-                    x: ev.offsetX,
-                    y: ev.offsetY,
-                };
-            };
-            canvas.onmouseup = () => {
-                this.dragging = false;
-                canvas.style.cursor = 'grab';
-            }
-            canvas.onmouseout = () => {
-                this.dragging = false;
-                canvas.style.cursor = 'grab';
-            }
-            canvas.onmousemove = (ev) => {
-                if (this.dragging && !this.switching) this.moveTo(ev.offsetX, ev.offsetY);
-            };
-            // 手机端事件
-            canvas.ontouchstart = (ev) => {
-                const { top, left } = canvas.getBoundingClientRect();
-                const targetX = ev.changedTouches[0].clientX - left;
-                const targetY = ev.changedTouches[0].clientY - top;
-                this.dragStartPoint = {x: targetX, y: targetY,};
-            };
-            canvas.ontouchmove = (ev) => {
-                // 通过和 canvas 的视窗相对位置计算
-                const { top, left } = canvas.getBoundingClientRect();
-                const targetX = ev.changedTouches[0].clientX - left;
-                const targetY = ev.changedTouches[0].clientY - top;
-                if (!this.switching) this.moveTo(targetX, targetY);
-            };
-
-            this.draw();
-        });
     }
 
     /**
@@ -364,7 +238,7 @@ export default class Scene {
     }
 
     // 移动某个角度偏移量 - 可同步移动 fovy
-    moveToAngle(deltaPitch: number, deltaYaw: number, options: {
+    private move(deltaPitch: number, deltaYaw: number, options: {
         animation?: boolean,
         fovyChange?: boolean,
         // 动画执行完毕后的回调
@@ -419,7 +293,7 @@ export default class Scene {
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        Scene.allFacesIndices.forEach((faceIndices, index) => {
+        CubeScene.allFacesIndices.forEach((faceIndices, index) => {
             this.renderFace(faceIndices, index as Unit);
         });
 
@@ -478,7 +352,7 @@ export default class Scene {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-        gl.uniform1i(this.getUFaceLocation(gl), unit);
+        gl.uniform1i(CubeScene.getUFaceLocation(gl), unit);
 
         gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
     }
@@ -506,41 +380,135 @@ export default class Scene {
     }
 
     /**
-     * 转场效果，走近目标热点
+     * 角度变化回调函数
+     * */
+    private angleChangeCallbacks: SceneAngleChangeCallback[] = [];
+
+    /**
+     * @property {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
+     * */
+    textures: TextureSource[] = [];
+
+    /**
+     * @property {HotSpot[]} hotSpots 热点
+     * */
+    hotSpots: HotSpot[] = [];
+
+    /**
+     * 添加回调函数
+     * */
+    addListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
+        switch (type) {
+            case "angleChange":
+                this.angleChangeCallbacks.push(callback);
+                break;
+            default:
+                break;
+        }
+    }
+    /**
+     * 移除监听
+     * */
+    removeListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
+        switch (type) {
+            case "angleChange":
+                this.angleChangeCallbacks = this.angleChangeCallbacks.filter(item => item !== callback);
+                break;
+            default:
+                break;
+        }
+    }
+    /**
+     * 移除所有监听
+     * */
+    removeAllListeners() {
+        this.angleChangeCallbacks = [];
+    }
+
+    // 更改纹理重新渲染，按照 f r u l d b 的顺序
+    replaceTextures(textures: TextureSource[]) {
+        this.textures = textures;
+        this.render(this.pano);
+    }
+
+    addHotSpots(hotSpots: HotSpot | HotSpot[]) {
+        if (hotSpots instanceof Array) {
+            this.hotSpots = this.hotSpots.concat(hotSpots);
+        } else {
+            this.hotSpots.push(hotSpots);
+        }
+    }
+
+    /**
+     * 渲染到 pano
+     * @param {Pano} pano 父容器
+     * */
+    render(pano: Pano) {
+        this.pano = pano;
+
+        const { gl, canvas } = this.pano;
+
+        initArrayBuffer(gl, CubeScene.vertices, 3, gl.FLOAT, 'a_Position');
+        initArrayBuffer(gl, CubeScene.texs, 2, gl.FLOAT, 'a_TexCoord');
+
+        this.loadTextures().then((images) => {
+            // [imgF, imgR, imgU, imgL, imgD, imgB]
+            images.forEach((img, index) => {
+                if (index <= 5) CubeScene.initTexture(gl, img, index as Unit);
+            });
+
+            // 在 render 里面重新绑定事件，其他 scene 的时间都会注销
+            // pc 端事件
+            canvas.onmousedown = (ev) => {
+                this.dragging = true;
+                canvas.style.cursor = 'grabbing';
+                this.dragStartPoint = {
+                    x: ev.offsetX,
+                    y: ev.offsetY,
+                };
+            };
+            canvas.onmouseup = () => {
+                this.dragging = false;
+                canvas.style.cursor = 'grab';
+            }
+            canvas.onmouseout = () => {
+                this.dragging = false;
+                canvas.style.cursor = 'grab';
+            }
+            canvas.onmousemove = (ev) => {
+                if (this.dragging && !this.switching) this.moveTo(ev.offsetX, ev.offsetY);
+            };
+            // 手机端事件
+            canvas.ontouchstart = (ev) => {
+                const { top, left } = canvas.getBoundingClientRect();
+                const targetX = ev.changedTouches[0].clientX - left;
+                const targetY = ev.changedTouches[0].clientY - top;
+                this.dragStartPoint = {x: targetX, y: targetY,};
+            };
+            canvas.ontouchmove = (ev) => {
+                // 通过和 canvas 的视窗相对位置计算
+                const { top, left } = canvas.getBoundingClientRect();
+                const targetX = ev.changedTouches[0].clientX - left;
+                const targetY = ev.changedTouches[0].clientY - top;
+                if (!this.switching) this.moveTo(targetX, targetY);
+            };
+
+            this.draw();
+        });
+    }
+
+    /**
+     * 点击热点回调
      * @param {HotSpot} hotSpot 目标热点
      * */
-    moveToHotSpot(hotSpot: HotSpot) {
-        /*this.switching = true;
-
-        let start = Date.now();
-        const startSign = start;
-        const totalDeltaPitch = -hotSpot.pitch;
-        const totalDeltaYaw = hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw;
-
-        const pitchSpeed = totalDeltaPitch / DefaultSceneSwitchDuration;
-        const yawSpeed = totalDeltaYaw / DefaultSceneSwitchDuration;
-
-        const anim = () => {
-            requestAnimationFrame(() => {
-                const now = Date.now();
-                const deltaTime = now - start;
-                if (now < startSign + DefaultSceneSwitchDuration) {
-                    this.fovy -= DefaultSceneSwitchFovySpeed;
-                    this.draw(pitchSpeed * deltaTime, yawSpeed * deltaTime);
-                    start = now;
-                    anim();
-                } else {
-                    // this.eye.position.z = 0;
-                    this.fovy = DefaultFovy;
-                    this.switching = false;
-                }
-            });
-        };
-        anim();*/
-        this.moveToAngle(-hotSpot.pitch, hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw, {
+    onHotSpotClick(hotSpot: HotSpot) {
+        this.move(-hotSpot.pitch, hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw, {
             animation: true,
             fovyChange: true,
-            callback: () => this.fovy = DefaultFovy,
+            callback: () => {
+                this.fovy = DefaultFovy;
+                this.pano.switchScene(hotSpot.target);
+            },
         });
     }
 
@@ -564,6 +532,6 @@ export default class Scene {
     setAngle(angle: SceneAngle, options: { animation?: boolean } = {}) {
         const { pitch: targetPitch, yaw: targetYaw } = angle;
         const { animation = false } = options;
-        this.moveToAngle(targetPitch - this.pitch, targetYaw - this.yaw, { animation });
+        this.move(targetPitch - this.pitch, targetYaw - this.yaw, { animation });
     }
 }
