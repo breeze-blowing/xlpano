@@ -26,7 +26,7 @@ export default class HotSpot {
   /**
    * @property {number} target 目标场景索引
    * */
-  target: number
+  target?: number
 
   /**
    * @property {Pano} pano 爷爷容器Pano
@@ -38,19 +38,21 @@ export default class HotSpot {
    * */
   scene: Scene;
 
+  // dom 原始的 click 监听函数
+  originOnClick?: (ev: MouseEvent) => any;
+
   /**
    * @constructor
    * @param {HTMLElement} dom 热点元素
-   * @param {number} target 转场目标场景索引
-   * @param {{pitch?: number, yaw?: number}} options 可选参数：pitch 位置-俯仰角-角度，范围是 (-90, 90)；yaw 位置-偏航角-角度
+   * @param {{pitch?: number, yaw?: number, target?: number}} options 可选参数：pitch 位置-俯仰角-角度，范围是 (-90, 90)；yaw 位置-偏航角-角度；target 转场目标场景索引
    * */
-  constructor(dom: HTMLElement, target: number, options?: { pitch?: number, yaw?: number }) {
-    if (!options) options = {};
-    const { pitch = 0, yaw = 0 } = options;
+  constructor(dom: HTMLElement, options: { pitch?: number, yaw?: number, target?: number, } = {}) {
+    const { pitch = 0, yaw = 0, target } = options;
     this.dom = dom;
     this.pitch = pitch;
     this.yaw = yaw;
     this.target = target;
+    this.originOnClick = dom.onclick;
   }
 
   /**
@@ -66,7 +68,13 @@ export default class HotSpot {
 
     const { container } = this.pano;
 
-    this.dom.onclick = this.onClick;
+    // target 有值的时候，给 click 添加默认场景切换操作
+    if (this.target || this.target === 0) {
+      this.dom.onclick = (ev) => {
+        this.scene.onHotSpotClick(this);
+        if (this.originOnClick) this.originOnClick(ev);
+      };
+    }
     container.append(this.dom);
 
     const { width, height } = this.dom.getBoundingClientRect();
@@ -113,13 +121,6 @@ export default class HotSpot {
     }
     deltaLeft *= ((container.offsetWidth / 2) * (offsetHeight / offsetWidth) * (90 / DefaultFovy));
     this.dom.style.left = `${centerX + deltaLeft}px`;
-  }
-
-  /**
-   * 点击热点执行函数
-   * */
-  onClick = () => {
-    this.scene.onHotSpotClick(this);
   }
 
   /**

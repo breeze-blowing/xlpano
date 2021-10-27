@@ -30,12 +30,16 @@
     <button id="setAngle" style="margin-left: 20px">设置角度：pitch:30 - yaw: 45</button>
     <button id="setAngleAnim" style="margin-left: 20px">设置角度：pitch:30 - yaw: 45 动画</button>
     <br/><br/>
+    <button id="getFovy">弹出当前场景视角</button>
+    <button id="setFovy" style="margin-left: 20px">设置视角：80</button>
+    <button id="setFovyAnim" style="margin-left: 20px">设置视角：80 动画</button>
+    <br/><br/>
     <button id="addAngleListener">角度变化监听</button>
     <button id="removeAngleListener" style="margin-left: 20px">移除监听</button>
     <button id="showCurrentAngle" style="margin-left: 20px">当前角度：</button>
     <br/><br/>
     <button id="replaceTexture">替换纹理</button>
-    <button id="replaceTextureBack">替换回来</button>
+    <button id="replaceTextureBack" style="margin-left: 20px">替换回来</button>
 </div>
 <script>
     document.body.addEventListener('touchmove', function (e) {

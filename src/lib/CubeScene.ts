@@ -4,15 +4,9 @@ import HotSpot from "./HotSpot";
 import {angleIn360, PI2Angle} from "../utils/math";
 import {TextureSource, WebGLRenderingContextWithProgram} from "../types/index";
 import Pano from "./Pano";
-import {
-    DefaultFovy,
-    DefaultMovingRate,
-    DefaultSceneSwitchDuration,
-    DefaultSceneSwitchFovySpeed,
-    DefaultYRange
-} from "../config/index";
+import {DefaultFovy, DefaultMovingRate, DefaultAnimDuration, DefaultYRange} from "../config/index";
 import {getTexImageSource} from "./resource";
-import Scene, {SceneAngle, SceneAngleChangeCallback, SceneListenerType} from "./interface/Scene";
+import Scene, {SceneAngle, SceneAngleChangeCallback, SceneListenerType, VoidFunction} from "./interface/Scene";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -194,9 +188,14 @@ export default class CubeScene implements Scene {
     private dragStartPoint = { x: 0, y: 0 };
 
     /**
-     * @property {boolean} switching 是否正在进行转场
+     * @property {boolean} angling 是否正在进行转动
      * */
-    private switching = false;
+    private angling = false;
+
+    /**
+     * @property {boolean} fovying 是否正在进行移动（fovy 切换）
+     * */
+    private fovying = false;
 
     /**
      * @property {Pano} pano 父容器Pano
@@ -238,18 +237,13 @@ export default class CubeScene implements Scene {
     }
 
     // 移动某个角度偏移量 - 可同步移动 fovy
-    private move(deltaPitch: number, deltaYaw: number, options: {
-        animation?: boolean,
-        fovyChange?: boolean,
-        // 动画执行完毕后的回调
-        callback?: () => void,
-    } = {}) {
-        const { animation = false, fovyChange = false, callback } = options;
+    private move(deltaPitch: number, deltaYaw: number, options: { animation?: boolean, duration?: number, callback?: VoidFunction} = {}) {
+        const {animation, callback, duration = DefaultAnimDuration} = options;
         if (animation) {
-            this.switching = true;
+            this.angling = true;
 
-            const pitchSpeed = deltaPitch / DefaultSceneSwitchDuration;
-            const yawSpeed = deltaYaw / DefaultSceneSwitchDuration;
+            const pitchSpeed = deltaPitch / duration;
+            const yawSpeed = deltaYaw / duration;
 
             let start = Date.now();
             const startSign = start;
@@ -258,13 +252,12 @@ export default class CubeScene implements Scene {
                 requestAnimationFrame(() => {
                     const now = Date.now();
                     const deltaTime = now - start;
-                    if (now < startSign + DefaultSceneSwitchDuration) {
-                        if (fovyChange) this.fovy -= DefaultSceneSwitchFovySpeed;
+                    if (now < startSign + duration) {
                         this.draw(pitchSpeed * deltaTime, yawSpeed * deltaTime);
                         start = now;
                         anim();
                     } else {
-                        this.switching = false;
+                        this.angling = false;
                         if (callback) callback();
                     }
                 });
@@ -272,6 +265,7 @@ export default class CubeScene implements Scene {
             anim();
         } else {
             this.draw(deltaPitch, deltaYaw);
+            if (callback) callback();
         }
     }
 
@@ -333,9 +327,7 @@ export default class CubeScene implements Scene {
                     return source;
                 }
             });
-        })
-        // return getTexImageSource([b, r, u, l, d, f]);
-        // return Promise.all([b, r, u, l, d, f].map(texture => getTexImageSource(texture)));
+        });
     }
 
     /**
@@ -457,7 +449,7 @@ export default class CubeScene implements Scene {
                 if (index <= 5) CubeScene.initTexture(gl, img, index as Unit);
             });
 
-            // 在 render 里面重新绑定事件，其他 scene 的时间都会注销
+            // 在 render 里面重新绑定事件，其他 scene 的事件都会注销
             // pc 端事件
             canvas.onmousedown = (ev) => {
                 this.dragging = true;
@@ -476,7 +468,7 @@ export default class CubeScene implements Scene {
                 canvas.style.cursor = 'grab';
             }
             canvas.onmousemove = (ev) => {
-                if (this.dragging && !this.switching) this.moveTo(ev.offsetX, ev.offsetY);
+                if (this.dragging && !this.angling && !this.fovying) this.moveTo(ev.offsetX, ev.offsetY);
             };
             // 手机端事件
             canvas.ontouchstart = (ev) => {
@@ -490,7 +482,7 @@ export default class CubeScene implements Scene {
                 const { top, left } = canvas.getBoundingClientRect();
                 const targetX = ev.changedTouches[0].clientX - left;
                 const targetY = ev.changedTouches[0].clientY - top;
-                if (!this.switching) this.moveTo(targetX, targetY);
+                if (!this.angling && !this.fovying) this.moveTo(targetX, targetY);
             };
 
             this.draw();
@@ -504,11 +496,11 @@ export default class CubeScene implements Scene {
     onHotSpotClick(hotSpot: HotSpot) {
         this.move(-hotSpot.pitch, hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw, {
             animation: true,
-            fovyChange: true,
-            callback: () => {
-                this.fovy = DefaultFovy;
-                this.pano.switchScene(hotSpot.target);
-            },
+            callback: () => this.pano.switchScene(hotSpot.target),
+        });
+        this.setFovy(this.fovy - 6, {
+            animation: true,
+            callback: () => this.fovy = DefaultFovy,
         });
     }
 
@@ -529,9 +521,49 @@ export default class CubeScene implements Scene {
     }
 
     // 设置角度
-    setAngle(angle: SceneAngle, options: { animation?: boolean } = {}) {
+    setAngle(angle: SceneAngle, options?: { animation?: boolean, duration?: number, callback?: VoidFunction }) {
         const { pitch: targetPitch, yaw: targetYaw } = angle;
-        const { animation = false } = options;
-        this.move(targetPitch - this.pitch, targetYaw - this.yaw, { animation });
+        const { animation = false, callback } = options;
+        this.move(targetPitch - this.pitch, targetYaw - this.yaw, options);
+    }
+
+    getFovy(): number {
+        return this.fovy;
+    }
+
+    setFovy(fovy: number, options: { animation?: boolean, duration?: number, callback?: VoidFunction } = {}) {
+        if (fovy <= 0 || fovy >= 180) {
+            throw new Error('视角范围超出(0, 180)限制');
+        }
+        const { animation, callback, duration = DefaultAnimDuration } = options;
+        if (animation) {
+            this.fovying = true;
+
+            const fovySpeed = (fovy - this.fovy) / duration;
+
+            let start = Date.now();
+            const startSign = start;
+
+            const anim = () => {
+                requestAnimationFrame(() => {
+                    const now = Date.now();
+                    const deltaTime = now - start;
+                    if (now < startSign + duration) {
+                        this.fovy += (fovySpeed * deltaTime);
+                        this.draw();
+                        start = now;
+                        anim();
+                    } else {
+                        this.fovying = false;
+                        if (callback) callback();
+                    }
+                });
+            };
+            anim();
+        } else {
+            this.fovy = fovy;
+            this.draw();
+            if (callback) callback();
+        }
     }
 }

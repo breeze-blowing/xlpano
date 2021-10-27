@@ -75,12 +75,16 @@ function main() {
 
   const scene1 = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b]);
 
-  const s1HotSpot = new HotSpot(createHotSpotDom('卫生间'), 1, { pitch: -10, yaw: 55 });
+  const s1HotSpot = new HotSpot(createHotSpotDom('卫生间'), { pitch: -10, yaw: 55, target: 1 });
 
-  scene1.addHotSpots([s1HotSpot]);
+  const s1CustomHotSpotDom = createHotSpotDom('自定义');
+  s1CustomHotSpotDom.onclick = () => alert('自定义热点交互');
+  const s1CustomHotSpot = new HotSpot(s1CustomHotSpotDom, { pitch: -10, yaw: 0 });
+
+  scene1.addHotSpots([s1HotSpot, s1CustomHotSpot]);
 
   const scene2 = new CubeScene([r_f, r_r, r_u, r_l, r_d, r_b]);
-  const s2HotSpot = new HotSpot(createHotSpotDom('主卧'), 0, { pitch: -10, yaw: 10 });
+  const s2HotSpot = new HotSpot(createHotSpotDom('主卧'), { pitch: -10, yaw: 10, target: 0 });
 
   scene2.addHotSpots(s2HotSpot);
 
@@ -133,6 +137,20 @@ function main() {
   document.getElementById('setAngleAnim').onclick = () => {
     const currentScene = pano.getCurrentScene();
     currentScene.setAngle({ pitch: 30, yaw: 45 }, { animation: true });
+  }
+
+  document.getElementById('getFovy').onclick = () => {
+    const currentScene = pano.getCurrentScene();
+    alert(`fovy: ${currentScene.getFovy().toFixed(2)}`);
+  };
+
+  document.getElementById('setFovy').onclick = () => {
+    const currentScene = pano.getCurrentScene();
+    currentScene.setFovy(80);
+  }
+  document.getElementById('setFovyAnim').onclick = () => {
+    const currentScene = pano.getCurrentScene();
+    currentScene.setFovy(80, { animation: true });
   }
 
   const onAngleChange = (angle: SceneAngle) => {

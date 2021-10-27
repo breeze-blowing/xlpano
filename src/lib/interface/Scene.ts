@@ -6,6 +6,8 @@ export type SceneListenerType = 'angleChange';
 
 export type SceneAngleChangeCallback = (angle: SceneAngle) => void;
 
+export type VoidFunction = () => void;
+
 // 场景角度
 export type SceneAngle = {
     pitch: number,
@@ -25,7 +27,9 @@ export default interface Scene {
     addHotSpots: (hotSpots: HotSpot | HotSpot[]) => void;
     render: (pano: Pano) => void;
     onHotSpotClick: (hotSpot: HotSpot) => void;
-    destroy: () => void;
+    destroy: VoidFunction;
     getAngle: () => SceneAngle;
-    setAngle: (angle: SceneAngle, options?: { animation?: boolean }) => void;
+    setAngle: (angle: SceneAngle, options?: { animation?: boolean, duration?: number, callback?: VoidFunction}) => void;
+    getFovy: () => number;
+    setFovy: (fovy: number, options?: { animation?: boolean, duration?: number, callback?: VoidFunction}) => void;
 }
