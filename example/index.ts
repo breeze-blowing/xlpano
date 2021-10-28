@@ -14,7 +14,7 @@ import r_l from './assets/restroom/l.jpg';
 import r_r from './assets/restroom/r.jpg';
 import r_u from './assets/restroom/u.jpg';
 
-import ggImg from './assets/gugong.jpg';
+import ggImg from './assets/gugong/gugong.jpg';
 
 import arrow from './assets/hotSpot/arrow.png';
 import {SceneAngle} from "../src/lib/interface/Scene";
@@ -77,7 +77,7 @@ function main() {
 
   // const scene1 = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b]);
 
-  // const s1HotSpot = new HotSpot(createHotSpotDom('卫生间'), { pitch: -10, yaw: 55, target: 1 });
+  const s1HotSpot = new HotSpot(createHotSpotDom('卫生间'), { pitch: -10, yaw: 55, target: 1 });
 
   // const s1CustomHotSpotDom = createHotSpotDom('自定义');
   // s1CustomHotSpotDom.onclick = () => alert('自定义热点交互');
@@ -94,6 +94,8 @@ function main() {
   // pano.addScene(scene2);
 
   const sphereScene = new SphereScene(ggImg);
+  sphereScene.addHotSpots([s1HotSpot, s1HotSpot]);
+
   pano.addScene(sphereScene);
 
   pano.render();
