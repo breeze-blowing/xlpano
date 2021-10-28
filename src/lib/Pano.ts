@@ -1,6 +1,8 @@
 import { getWebGLContext, initShaders } from '../utils/cuon-utils';
-import VertShader from '../shader/index.vert';
-import FragShader from '../shader/index.frag';
+// import VertShader from '../shader/cube/index.vert';
+// import FragShader from '../shader/cube/index.frag';
+import VertShader from '../shader/sphere/index.vert';
+import FragShader from '../shader/sphere/index.frag';
 import {WebGLRenderingContextWithProgram} from "../types/index";
 import {loadPanoTexImage} from "./resource";
 import Scene from "./interface/Scene";

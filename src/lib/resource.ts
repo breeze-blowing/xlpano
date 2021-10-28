@@ -22,6 +22,11 @@ export async function getTexImageSource(sources: string[]): Promise<TexImageSour
   return result;
 }
 
+export async function getSingleTexImageSource(src: string): Promise<TexImageSource> {
+  if (ImageResource[src]) return ImageResource[src];
+  return await loadImage(src);
+}
+
 // 加载整个 pano 的纹理图，首个场景加载完就放行
 export async function loadPanoTexImage(pano: Pano) {
   const scenes = pano.scenes;
