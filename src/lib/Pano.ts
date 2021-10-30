@@ -85,13 +85,16 @@ export default class Pano {
     canvas.style.width  = desiredCSSWidth  + "px";
     canvas.style.height = desiredCSSHeight + "px";
 
+    // canvas 大小变化后，即时改变 gl 的 viewport
+    this.gl.viewport(0, 0, canvas.width, canvas.height);
+
     canvas.style.cursor = 'grab';
   }
 
   /**
    * todo container 尺寸变化监听，重新渲染
    * */
-  /*onContainerResize() {
+  onContainerResize() {
     if (ResizeObserver) {
       const observer = new ResizeObserver(() => {
         if (this.rendered) {
@@ -101,7 +104,7 @@ export default class Pano {
       });
       observer.observe(this.container);
     }
-  }*/
+  }
 
   /**
    * @constructor
@@ -119,12 +122,10 @@ export default class Pano {
     this.canvas = canvas;
     container.append(canvas);
 
+    this.gl = getWebGLContext(canvas, debug);
     this.setStyle();
 
-    this.gl = getWebGLContext(canvas, debug);
-    // initShaders(this.gl, CubeVertShader, CubeFragShader);
-
-    // this.onContainerResize();
+    this.onContainerResize();
   }
 
   /**
@@ -195,10 +196,6 @@ export default class Pano {
       if (!currentScene) {
         throw new Error('当前场景不存在');
       }
-      // const [vertShader, fragShader] = Pano.getShaderSource(currentScene);
-      // console.log(currentScene instanceof CubeScene);
-      // console.log(currentScene instanceof SphereScene);
-      // console.log(fragShader);
       this.initShader();
       const gl = this.gl;
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
