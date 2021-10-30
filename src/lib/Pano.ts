@@ -1,11 +1,13 @@
-import { getWebGLContext, initShaders } from '../utils/cuon-utils';
-// import VertShader from '../shader/cube/index.vert';
-// import FragShader from '../shader/cube/index.frag';
-import VertShader from '../shader/sphere/index.vert';
-import FragShader from '../shader/sphere/index.frag';
+import {createProgram, getWebGLContext, useProgram} from '../utils/cuon-utils';
+import CubeVertShader from '../shader/cube/index.vert';
+import CubeFragShader from '../shader/cube/index.frag';
+import SphereVertShader from '../shader/sphere/index.vert';
+import SphereFragShader from '../shader/sphere/index.frag';
 import {WebGLRenderingContextWithProgram} from "../types/index";
 import {loadPanoTexImage} from "./resource";
 import Scene from "./interface/Scene";
+import CubeScene from "./CubeScene";
+import SphereScene from "./SphereScene";
 
 type SceneChangeCallback = (scene: Scene, index: number) => void;
 
@@ -17,6 +19,21 @@ type ListenerCallback = SceneChangeCallback;
  * 容器
  * */
 export default class Pano {
+  static CubeGLProgram: WebGLProgram;
+  static SphereGLProgram: WebGLProgram;
+  initShader() {
+    const scene = this.scenes[this.sceneIndex];
+    if (scene instanceof CubeScene) {
+      if(!Pano.CubeGLProgram) Pano.CubeGLProgram = createProgram(this.gl, CubeVertShader, CubeFragShader);
+      useProgram(this.gl, Pano.CubeGLProgram);
+    } else if (scene instanceof SphereScene) {
+      if (!Pano.SphereGLProgram) Pano.SphereGLProgram = createProgram(this.gl, SphereVertShader, SphereFragShader);
+      useProgram(this.gl, Pano.SphereGLProgram);
+    } else {
+      throw new Error('当前场景非法');
+    }
+  }
+
   /**
    * @property {HTMLElement} container 容器
    * */
@@ -105,7 +122,7 @@ export default class Pano {
     this.setStyle();
 
     this.gl = getWebGLContext(canvas, debug);
-    initShaders(this.gl, VertShader, FragShader);
+    // initShaders(this.gl, CubeVertShader, CubeFragShader);
 
     // this.onContainerResize();
   }
@@ -178,6 +195,11 @@ export default class Pano {
       if (!currentScene) {
         throw new Error('当前场景不存在');
       }
+      // const [vertShader, fragShader] = Pano.getShaderSource(currentScene);
+      // console.log(currentScene instanceof CubeScene);
+      // console.log(currentScene instanceof SphereScene);
+      // console.log(fragShader);
+      this.initShader();
       const gl = this.gl;
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.enable(gl.DEPTH_TEST);

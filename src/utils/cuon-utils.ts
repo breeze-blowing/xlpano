@@ -17,13 +17,24 @@ export function initShaders(gl: WebGLRenderingContextWithProgram, vshader: strin
 }
 
 /**
+ * 切换程序对象
+ * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
+ * @param {WebGLProgram} program 程序对象
+ * @return void
+ * */
+export function useProgram(gl: WebGLRenderingContextWithProgram, program: WebGLProgram): void {
+  gl.useProgram(program);
+  gl.program = program;
+}
+
+/**
  * 创建 program 程序对象
  * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
  * @param {string} vshader 顶点着色器代码字符串
  * @param {string} fshader 片元着色器代码字符串
  * @return WebGLProgram
  */
-function createProgram(gl: WebGLRenderingContextWithProgram, vshader: string, fshader: string): WebGLProgram {
+export function createProgram(gl: WebGLRenderingContextWithProgram, vshader: string, fshader: string): WebGLProgram {
   // 创建着色器对象
   const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vshader);
   const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fshader);
