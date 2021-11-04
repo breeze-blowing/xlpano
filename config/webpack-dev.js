@@ -1,23 +1,12 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { merge } = require('webpack-merge');
-const commonConfig = require('./webpack-common');
+const exampleConfig = require('./webpack-example');
 
 const devConfig = {
-    entry: "./example/index.ts",
-    output: {
-        filename: "bundle.js",
-        path: __dirname + "/dist",
-    },
+    mode: "development",
     devServer: {
-        static: './dist',
+        static: '../docs',
         port: '8060',
     },
-    plugins: [
-        new HtmlWebpackPlugin({
-            title: "XLPano 示例",
-            template: "./example/index.html"
-        }),
-    ],
 };
 
-module.exports = merge(commonConfig, devConfig);
+module.exports = merge(exampleConfig, devConfig);
