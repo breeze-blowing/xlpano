@@ -10,8 +10,8 @@ export type VoidFunction = () => void;
 
 // 场景角度
 export type SceneAngle = {
-    pitch: number,
-    yaw: number,
+    pitch?: number,
+    yaw?: number,
 }
 
 /**

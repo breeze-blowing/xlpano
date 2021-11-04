@@ -182,9 +182,16 @@ export default class BaseScene implements Scene {
   }
 
   addHotSpots(hotSpots: HotSpot | HotSpot[]) {
+    // 如果添加热点的时候，scene 已经有偏移了，需要修补这个偏移量
+    const pitchAngle = (spot: HotSpot) => {
+      spot.pitch += this.pitch;
+      spot.yaw -= this.yaw;
+    }
     if (hotSpots instanceof Array) {
+      hotSpots.forEach(spot => pitchAngle(spot))
       this.hotSpots = this.hotSpots.concat(hotSpots);
     } else {
+      pitchAngle(hotSpots);
       this.hotSpots.push(hotSpots as HotSpot);
     }
   }

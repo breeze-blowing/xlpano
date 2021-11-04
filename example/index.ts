@@ -1,4 +1,4 @@
-import { Pano, CubeScene, SphereScene, HotSpot } from '../src/index';
+import { Pano, CubeScene, SphereScene, HotSpot, SceneAngle } from '../src/index';
 
 import b_b from './assets/bedroom/b.jpg';
 import b_d from './assets/bedroom/d.jpg';
@@ -7,98 +7,76 @@ import b_l from './assets/bedroom/l.jpg';
 import b_r from './assets/bedroom/r.jpg';
 import b_u from './assets/bedroom/u.jpg';
 
-import r_b from './assets/restroom/b.jpg';
-import r_d from './assets/restroom/d.jpg';
-import r_f from './assets/restroom/f.jpg';
-import r_l from './assets/restroom/l.jpg';
-import r_r from './assets/restroom/r.jpg';
-import r_u from './assets/restroom/u.jpg';
+import r_b from './assets/restroom/b.jpeg';
+import r_d from './assets/restroom/d.jpeg';
+import r_f from './assets/restroom/f.jpeg';
+import r_l from './assets/restroom/l.jpeg';
+import r_r from './assets/restroom/r.jpeg';
+import r_u from './assets/restroom/u.jpeg';
 
-import ggImg from './assets/gugong/2_1.jpg';
+import sphereImg from './assets/room.jpeg';
 
-import arrow from './assets/hotSpot/arrow.png';
-import {SceneAngle} from "../src/lib/interface/Scene";
+import arrow from './assets/hotSpot/arrow.gif';
 
-/**
- * 动态插入热点箭头图片动画样式文件
- * @param {number} imageSize
- * */
-function injectHotSpotArrowAnimCss(imageSize: number) {
-  const steps = 25
-  const cssStr = `@keyframes xlpano_hot_spot_arrow_img_anim_name{0%{top:0}100%{top:-${imageSize * steps}px}}`;
-  document.styleSheets[0].insertRule(cssStr, document.styleSheets[0].cssRules.length)
-}
-
+// 创建热点 dom
 function createHotSpotDom(description?: string): HTMLElement {
-  const imgSize = 50;
-
   const container = document.createElement('div');
-  container.style.width = '70px';
-  container.style.height = '50px';
-  container.style.position = 'absolute';
   container.style.display = 'flex';
   container.style.flexDirection = 'column';
+  container.style.justifyContent = 'center';
   container.style.alignItems = 'center';
   container.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
   container.style.borderRadius = '10px';
-  container.style.color = '#FFFFFF';
-  container.style.fontSize = '16px';
-  container.style.paddingTop = '2px';
-
-  if (description) container.innerText = description;
-
-  const imgCon = document.createElement('div');
-  imgCon.style.width = `${imgSize}px`;
-  imgCon.style.height = `${imgSize}px`;
-  imgCon.style.cursor = 'pointer';
-  imgCon.style.marginTop = '-14px';
-  imgCon.style.overflow = 'hidden';
-
-  container.appendChild(imgCon);
+  container.style.padding = '0 8px 10px';
 
   const img = document.createElement('img');
   img.src = arrow;
-  img.style.objectFit = 'cover';
-  img.width = imgSize;
-  img.height = 1250;
-  img.style.position = 'relative';
-  img.style.animation = 'xlpano_hot_spot_arrow_img_anim_name 2s steps(25) infinite';
+  img.style.objectFit = 'contain';
+  img.style.width = '40px';
+  img.style.height = '40px';
 
-  imgCon.appendChild(img);
+  container.appendChild(img);
+
+  if (description) {
+    const desc = document.createElement('span');
+    desc.style.fontSize = '12px';
+    desc.style.color = '#ffffff';
+    desc.style.marginTop = '6px';
+    desc.innerText = description;
+    container.appendChild(desc);
+  }
 
   return container;
 }
 
 function main() {
-  // 插入 anim - css
-  injectHotSpotArrowAnimCss(50);
-
   const pano = new Pano('containerId', true);
 
-  const bedroomScene = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b]);
-
+  // 主卧
+  const bedroomScene = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b], { yaw: 50, pitch: 20 });
+  // 主卧热点
   const restroomHotSpot = new HotSpot(createHotSpotDom('卫生间'), { pitch: -10, yaw: 55, target: 1 });
+  const toBeautyDom = createHotSpotDom('看精装');
+  toBeautyDom.onclick = () => pano.setScene(2);
+  const beautySpot = new HotSpot(toBeautyDom, { pitch: -10, yaw: 0 });
+  bedroomScene.addHotSpots([restroomHotSpot, beautySpot]);
 
-  const s1CustomHotSpotDom = createHotSpotDom('自定义');
-  s1CustomHotSpotDom.onclick = () => alert('自定义热点交互');
-  const s1CustomHotSpot = new HotSpot(s1CustomHotSpotDom, { pitch: -10, yaw: 0 });
-
-  const ggHotSpot = new HotSpot(createHotSpotDom('故宫'), { pitch: -10, yaw: 10, target: 2 });
-
-  bedroomScene.addHotSpots([restroomHotSpot, s1CustomHotSpot, ggHotSpot]);
-
-  const restroomScene = new CubeScene([r_f, r_r, r_u, r_l, r_d, r_b]);
+  // 卫生间
+  const restroomScene = new CubeScene([r_f, r_r, r_u, r_l, r_d, r_b], { yaw: 200, pitch: 30 });
+  // 卫生间热点
   const bedroomHotSpot = new HotSpot(createHotSpotDom('主卧'), { pitch: -10, yaw: 10, target: 0 });
-
   restroomScene.addHotSpots(bedroomHotSpot);
 
-  const ggScene = new SphereScene(ggImg);
-  const backHomeSpot = new HotSpot(createHotSpotDom('回家'), { pitch: 0, yaw: 0, target: 0 });
-  ggScene.addHotSpots(backHomeSpot);
+  // 精装主卧
+  const beautyScene = new SphereScene(sphereImg, { yaw: 80, pitch: 10 });
+  // 精装主卧热点
+  const backHomeSpot = new HotSpot(createHotSpotDom('回简装'), { pitch: 10, yaw: 80, target: 0 });
+  beautyScene.addHotSpots(backHomeSpot);
 
+  // 全部添加到 pano
   pano.addScene(bedroomScene);
   pano.addScene(restroomScene);
-  pano.addScene(ggScene);
+  pano.addScene(beautyScene);
 
   pano.render();
 
@@ -109,8 +87,8 @@ function main() {
       alert('房间');
     } else if (currentScene === restroomScene) {
       alert('洗手间');
-    } else if (currentScene === ggScene) {
-      alert('故宫');
+    } else if (currentScene === beautyScene) {
+      alert('精装房间');
     } else {
       alert('没有当前场景');
     }
@@ -126,7 +104,7 @@ function main() {
   }
 
   const onSceneChange = (scene: CubeScene, index: number) => {
-    document.getElementById('showCurrentScene').innerText = `当前场景：scene${index + 1}`;
+    document.getElementById('showCurrentScene').innerText = `当前场景：第${index + 1}个场景`;
   };
 
   document.getElementById('addListener').onclick = () => {
@@ -175,14 +153,14 @@ function main() {
   document.getElementById('addAngleListener').onclick = () => {
     bedroomScene.addListener('angleChange', onAngleChange);
     restroomScene.addListener('angleChange', onAngleChange);
-    ggScene.addListener('angleChange', onAngleChange);
+    beautyScene.addListener('angleChange', onAngleChange);
     document.getElementById('showCurrentAngle').innerText = '移动切换后显示角度';
   };
 
   document.getElementById('removeAngleListener').onclick = () => {
     bedroomScene.removeListener('angleChange', onAngleChange);
     restroomScene.removeListener('angleChange', onAngleChange);
-    ggScene.removeListener('angleChange', onAngleChange);
+    beautyScene.removeListener('angleChange', onAngleChange);
     document.getElementById('showCurrentAngle').innerText = '当前角度：';
   };
 

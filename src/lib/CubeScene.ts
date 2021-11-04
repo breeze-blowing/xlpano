@@ -3,6 +3,7 @@ import {TextureSource, WebGLRenderingContextWithProgram} from "../types/index";
 import Pano from "./Pano";
 import {getTexImageSource} from "./resource";
 import BaseScene from "./interface/BaseScene";
+import {SceneAngle} from "./interface/Scene";
 
 /**
  * 每个面的编号 0-f 1-r 2-u 3-l 4-d 5-b
@@ -146,9 +147,14 @@ export default class CubeScene extends BaseScene {
      * @constructor 构造函数
      * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
-    constructor(textures: TextureSource[]) {
+    constructor(textures: TextureSource[], defaultAngle?: SceneAngle) {
         super();
         this.textures = textures;
+        if (defaultAngle) {
+            const { pitch, yaw } = defaultAngle;
+            if (pitch) this.pitch = pitch;
+            if (yaw) this.yaw = yaw;
+        }
     }
 
     drawModel() {

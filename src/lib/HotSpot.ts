@@ -48,6 +48,9 @@ export default class HotSpot {
    * */
   constructor(dom: HTMLElement, options: { pitch?: number, yaw?: number, target?: number, } = {}) {
     const { pitch = 0, yaw = 0, target } = options;
+    // 强制 dom 绝对定位
+    dom.style.position = 'absolute';
+    dom.style.cursor = 'pointer';
     this.dom = dom;
     this.pitch = pitch;
     this.yaw = yaw;

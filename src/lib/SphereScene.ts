@@ -3,11 +3,12 @@ import BaseScene from "./interface/BaseScene";
 import {initArrayBuffer, loadImage} from "../utils/process";
 import Pano from "./Pano";
 import {getSingleTexImageSource} from "./resource";
+import {SceneAngle} from "./interface/Scene";
 
 export default class SphereScene extends BaseScene {
 
   // 经纬度切成多少分
-  static sections = 20;
+  static sections = 60;
 
   // 顶点坐标，纹理坐标，和顶点索引
   static get verticeTexIndices() {
@@ -71,9 +72,14 @@ export default class SphereScene extends BaseScene {
 
   textures: TextureSource;
 
-  constructor(textures: TextureSource) {
+  constructor(textures: TextureSource, defaultAngle?: SceneAngle) {
     super();
     this.textures = textures;
+    if (defaultAngle) {
+      const { pitch, yaw } = defaultAngle;
+      if (pitch) this.pitch = pitch;
+      if (yaw) this.yaw = yaw;
+    }
   }
 
   drawModel() {

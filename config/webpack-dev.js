@@ -10,7 +10,7 @@ const devConfig = {
     },
     devServer: {
         static: './dist',
-        port: '8000',
+        port: '8060',
     },
     plugins: [
         new HtmlWebpackPlugin({
