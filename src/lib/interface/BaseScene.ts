@@ -6,6 +6,18 @@ import HotSpot from "../HotSpot";
 import {angleIn360, PI2Angle} from "../../utils/math";
 import {TextureSource} from "../../types/index";
 
+/**
+ * 场景变化的动画参数
+ * @param {boolean} animation 是否执行动画
+ * @param {number} duration 动画执行时间
+ * @param {VoidFunction} callback 执行完动画后的回调函数
+ * */
+interface AnimationOptions {
+  animation?: boolean,
+  duration?: number,
+  callback?: VoidFunction,
+}
+
 export default class BaseScene implements Scene {
   /**
    * @property {number} pitch 俯仰角-绕 x 轴旋转角度
@@ -71,6 +83,9 @@ export default class BaseScene implements Scene {
    * */
   pano: Pano;
 
+  /**
+   * 计算 mvp 矩阵，并传递到着色器中变量
+   * */
   setMvpMatrix() {
     const { gl } = this.pano;
     const {
@@ -94,7 +109,7 @@ export default class BaseScene implements Scene {
   }
 
   /**
-   * 角度变化回调函数
+   * 角度变化回调函数集合
    * */
   angleChangeCallbacks: SceneAngleChangeCallback[] = [];
 
@@ -105,6 +120,8 @@ export default class BaseScene implements Scene {
 
   /**
    * 添加回调函数
+   * @param type {SceneListenerType} 事件类型，预定义好的
+   * @param  callback {SceneAngleChangeCallback} 回调函数
    * */
   addListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
     switch (type) {
@@ -117,6 +134,8 @@ export default class BaseScene implements Scene {
   }
   /**
    * 移除监听
+   * @param type {SceneListenerType} 事件类型，预定义好的
+   * @param  callback {SceneAngleChangeCallback} 回调函数
    * */
   removeListener(type: SceneListenerType, callback: SceneAngleChangeCallback) {
     switch (type) {
@@ -142,7 +161,10 @@ export default class BaseScene implements Scene {
     if (this.hotSpots && this.hotSpots.length) this.hotSpots.forEach(hotSpot => hotSpot.destroy());
   }
 
-  // 获取当前角度
+  /**
+   * 获取当前角度
+   * @return {SceneAngle} 俯仰角/偏航角
+   * */
   getAngle(): SceneAngle {
     return {
       pitch: this.pitch,
@@ -150,23 +172,37 @@ export default class BaseScene implements Scene {
     }
   }
 
+  /**
+   * 获取视角范围
+   * @return {number} 视角范围
+   * */
   getFovy(): number {
     return this.fovy;
   }
 
-  // 渲染热点
+  /**
+   * 渲染热点
+   * @param {number} deltaPitch 俯仰角偏移量
+   * @param {number} deltaYaw 偏航角偏移量
+   * */
   renderHotSpots(deltaPitch: number = 0, deltaYaw: number = 0) {
     if (this.hotSpots && this.hotSpots.length) {
       this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, this.pano, this));
     }
   }
 
-  // 执行角度变换回调
+  /**
+   * 执行角度变化后的回调函数
+   * */
   executeAngleChangeCallbacks() {
     this.angleChangeCallbacks.forEach(callback => callback({ pitch: this.pitch, yaw: this.yaw }));
   }
 
-  // 绘制前的准备工作
+  /**
+   * 绘制前的准备工作
+   * 1. 确定最终角度，包括超出范围后的计算
+   * 2. 设置 mvp 矩阵
+   * */
   beforeDrawElements(deltaPitch: number = 0, deltaYaw: number = 0) {
     const { gl } = this.pano;
     this.pitch += deltaPitch;
@@ -181,6 +217,10 @@ export default class BaseScene implements Scene {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 
+  /**
+   * 添加热点
+   * @param {HotSpot | HotSpot[]} hotSpots 待添加的热点
+   * */
   addHotSpots(hotSpots: HotSpot | HotSpot[]) {
     // 如果添加热点的时候，scene 已经有偏移了，需要修补这个偏移量
     const pitchAngle = (spot: HotSpot) => {
@@ -200,7 +240,6 @@ export default class BaseScene implements Scene {
    * 绘制变换后的场景和热点
    * @param deltaPitch {number} 场景的俯仰角偏移值
    * @param deltaYaw {number} 场景的偏航角偏移值
-   * @param instance {Scene} 场景实例
    * */
   draw(deltaPitch: number = 0, deltaYaw: number = 0) {
     this.beforeDrawElements(deltaPitch, deltaYaw);
@@ -238,8 +277,13 @@ export default class BaseScene implements Scene {
     this.dragStartPoint = {x: targetX, y: targetY};
   }
 
-  // 移动某个角度偏移量 - 可同步移动 fovy
-  move(deltaPitch: number, deltaYaw: number, options: { animation?: boolean, duration?: number, callback?: VoidFunction} = {}) {
+  /**
+   * 移动角度偏移量
+   * @param deltaPitch {number} 俯仰角偏移量
+   * @param deltaYaw {number} 偏航角偏移量
+   * @param options {AnimationOptions} 可选动画参数
+   * */
+  move(deltaPitch: number, deltaYaw: number, options: AnimationOptions = {}) {
     const {animation, callback, duration = DefaultAnimDuration} = options;
     if (animation) {
       this.angling = true;
@@ -271,13 +315,22 @@ export default class BaseScene implements Scene {
     }
   }
 
-  // 设置角度
-  setAngle(angle: SceneAngle, options?: { animation?: boolean, duration?: number, callback?: VoidFunction }) {
+  /**
+   * 设置到某个角度
+   * @param angle {SceneAngle} 目标角度值
+   * @param options {AnimationOptions} 可选动画参数
+   * */
+  setAngle(angle: SceneAngle, options?: AnimationOptions) {
     const { pitch: targetPitch, yaw: targetYaw } = angle;
     this.move(targetPitch - this.pitch, targetYaw - this.yaw, options);
   }
 
-  setFovy(fovy: number, options: { animation?: boolean, duration?: number, callback?: VoidFunction } = {}) {
+  /**
+   * 设置到视角
+   * @param fovy {number} 目标视角
+   * @param options {AnimationOptions} 可选动画参数
+   * */
+  setFovy(fovy: number, options: AnimationOptions = {}) {
     if (fovy <= 0 || fovy >= 180) {
       throw new Error('视角范围超出(0, 180)限制');
     }
@@ -314,7 +367,7 @@ export default class BaseScene implements Scene {
   }
 
   /**
-   * 点击热点回调
+   * 点击热点回调，执行切换场景前的动画
    * @param {HotSpot} hotSpot 目标热点
    * */
   onHotSpotClick(hotSpot: HotSpot) {
@@ -328,7 +381,9 @@ export default class BaseScene implements Scene {
     });
   }
 
-  // 交互事件绑定
+  /**
+   * PC端和移动端的移动事件绑定
+   * */
   eventBind() {
     const { canvas } = this.pano;
     // pc 端事件
@@ -368,7 +423,7 @@ export default class BaseScene implements Scene {
   }
 
   /**
-   * 纹理资源：在各个子类中重写
+   * @property {TextureSource[] | TextureSource} textures 纹理资源：在各个子类中重写
    * */
   textures: TextureSource[] | TextureSource;
 
@@ -379,6 +434,7 @@ export default class BaseScene implements Scene {
 
   /**
    * 渲染模型：在各个子类中重写
+   * @param textures {TextureSource[] | TextureSource} 替换后的纹理资源
    * */
   replaceTextures(textures: TextureSource[] | TextureSource) {}
 

@@ -19,8 +19,20 @@ type ListenerCallback = SceneChangeCallback;
  * 容器
  * */
 export default class Pano {
+
+  /**
+   * @static {WebGLProgram} CubeGLProgram 立方体 WebGL 程序对象
+   * */
   static CubeGLProgram: WebGLProgram;
+
+  /**
+   * @static {WebGLProgram} SphereGLProgram 球体 WebGL 程序对象
+   * */
   static SphereGLProgram: WebGLProgram;
+
+  /**
+   * 初始化着色器程序
+   * */
   initShader() {
     const scene = this.scenes[this.sceneIndex];
     if (scene instanceof CubeScene) {
@@ -92,7 +104,7 @@ export default class Pano {
   }
 
   /**
-   * todo container 尺寸变化监听，重新渲染
+   * container 尺寸变化监听，重新渲染
    * */
   onContainerResize() {
     if (ResizeObserver) {
@@ -134,6 +146,8 @@ export default class Pano {
   sceneChangeCallbacks: SceneChangeCallback[] = [];
   /**
    * 添加回调函数
+   * @param {ListenerType} type 监听类型，预定义好的
+   * @param {ListenerCallback} callback 回调函数
    * */
   addListener(type: ListenerType, callback: ListenerCallback) {
     switch (type) {
@@ -145,7 +159,9 @@ export default class Pano {
     }
   }
   /**
-   * 移除监听
+   * 添加回调函数
+   * @param {ListenerType} type 监听类型，预定义好的
+   * @param {ListenerCallback} callback 回调函数
    * */
   removeListener(type: ListenerType, callback: ListenerCallback) {
     switch (type) {

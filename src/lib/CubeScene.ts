@@ -139,13 +139,14 @@ export default class CubeScene extends BaseScene {
     }
 
     /**
-     * @property {TextureSource} textures 六个面的纹理图片，按照 f r u l d b 的顺序
+     * @property {TextureSource[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
      * */
     textures: TextureSource[] = [];
 
     /**
      * @constructor 构造函数
      * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
+     * @param {SceneAngle} defaultAngle 默认展示角度
      * */
     constructor(textures: TextureSource[], defaultAngle?: SceneAngle) {
         super();
@@ -157,6 +158,9 @@ export default class CubeScene extends BaseScene {
         }
     }
 
+    /**
+     * 渲染立方体
+     * */
     drawModel() {
         CubeScene.allFacesIndices.forEach((faceIndices, index) => {
             this.renderFace(faceIndices, index as Unit);
@@ -212,7 +216,10 @@ export default class CubeScene extends BaseScene {
         gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
     }
 
-    // 更改纹理重新渲染，按照 f r u l d b 的顺序
+    /**
+     * 更改纹理重新渲染
+     * @param {TextureSource[]} textures 纹理资源集合，按照 f r u l d b 的顺序
+     * */
     replaceTextures(textures: TextureSource[]) {
         this.textures = textures;
         this.render(this.pano);

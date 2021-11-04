@@ -38,7 +38,9 @@ export default class HotSpot {
    * */
   scene: Scene;
 
-  // dom 原始的 click 监听函数
+  /**
+   * @property {(ev: MouseEvent) => any} originOnClick dom 原始的 click 监听函数
+   * */
   originOnClick?: (ev: MouseEvent) => any;
 
   /**

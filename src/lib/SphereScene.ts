@@ -1,16 +1,21 @@
 import {TextureSource, WebGLRenderingContextWithProgram} from "../types/index";
 import BaseScene from "./interface/BaseScene";
-import {initArrayBuffer, loadImage} from "../utils/process";
+import {initArrayBuffer} from "../utils/process";
 import Pano from "./Pano";
 import {getSingleTexImageSource} from "./resource";
 import {SceneAngle} from "./interface/Scene";
 
 export default class SphereScene extends BaseScene {
 
-  // 经纬度切成多少分
+  /**
+   * @static {number} sections 球体经纬被切分的份数
+   * */
   static sections = 60;
 
-  // 顶点坐标，纹理坐标，和顶点索引
+  /**
+   * @static
+   * @return {{vertices, texs, indices}} 顶点坐标，纹理坐标，顶点索引
+   * */
   static get verticeTexIndices() {
     const verticesArray: number[] = [];
     const texsArray: number[] = [];
@@ -48,7 +53,11 @@ export default class SphereScene extends BaseScene {
     return {vertices, texs, indices};
   };
 
-  // 初始化纹理
+  /**
+   * 将每个面的纹理贴图赋值给每个面的 sampler
+   * @param {WebGLRenderingContextWithProgram} gl WebGL 上下文
+   * @param {TexImageSource} image 图像资源
+   * */
   static initTexture(gl: WebGLRenderingContextWithProgram, image: TexImageSource) {
     const texture = gl.createTexture();
     if (!texture) {
@@ -70,8 +79,16 @@ export default class SphereScene extends BaseScene {
     gl.uniform1i(u_Sampler, 0);
   }
 
+  /**
+   * @property {TextureSource} textures 2:1球体纹理图
+   * */
   textures: TextureSource;
 
+  /**
+   * @constructor 构造函数
+   * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
+   * @param {SceneAngle} defaultAngle 默认展示角度
+   * */
   constructor(textures: TextureSource, defaultAngle?: SceneAngle) {
     super();
     this.textures = textures;
@@ -82,6 +99,9 @@ export default class SphereScene extends BaseScene {
     }
   }
 
+  /**
+   * 渲染球体
+   * */
   drawModel() {
     const { indices } = SphereScene.verticeTexIndices;
     const { gl } = this.pano;

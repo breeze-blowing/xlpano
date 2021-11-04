@@ -10,6 +10,11 @@ import {loadImage} from "../utils/process";
 
 const ImageResource: {[keu: string]: TexImageSource} = {};
 
+/**
+ * 加载图片资源
+ * @param {string[]} sources 图片资源路径集合
+ * @return {TexImageSource[]} 图片资源对象集合
+ * */
 export async function getTexImageSource(sources: string[]): Promise<TexImageSource[]> {
   const result: TexImageSource[] = [];
   for (const src of sources) {
@@ -22,12 +27,22 @@ export async function getTexImageSource(sources: string[]): Promise<TexImageSour
   return result;
 }
 
+/**
+ * 加载图片资源
+ * @param {string} src 图片资源路径
+ * @return {TexImageSource} 图片资源对象
+ * */
 export async function getSingleTexImageSource(src: string): Promise<TexImageSource> {
   if (ImageResource[src]) return ImageResource[src];
   return await loadImage(src);
 }
 
-// 加载整个 pano 的纹理图，首个场景加载完就放行
+/**
+ * 加载整个 pano 的纹理图
+ * 1、加载首个场景，加载完就放行
+ * 2、接着加载首个场景邻近的场景，先发出请求
+ * 3、同时开始加载其他场景，后发出请求
+ * */
 export async function loadPanoTexImage(pano: Pano) {
   const scenes = pano.scenes;
   if (scenes.length > 0) {
@@ -62,10 +77,18 @@ export async function loadPanoTexImage(pano: Pano) {
   }
 }
 
+/**
+ * 加载单个场景的纹理图片，加载完后直接缓存到 ImageResource
+ * @param {Scene} scene 场景
+ * */
 function loadOneSceneTexImage(scene: Scene): Promise<void> {
   return loadTexImages(filterSceneSrcTex(scene));
 }
 
+/**
+ * 加载图片，加载完后直接缓存到 ImageResource
+ * @param {string[]} images 图片资源路径集合
+ * */
 function loadTexImages(images: string[]): Promise<void> {
   return Promise.all(images.map(image => loadImage(image))).then((results: TexImageSource[]) => {
     images.forEach((src, index) => {
@@ -74,7 +97,10 @@ function loadTexImages(images: string[]): Promise<void> {
   });
 }
 
-// 过滤一个场景中资源地址类型的纹理
+/**
+ * 过滤一个场景中资源地址类型的纹理，- 因为场景的纹理可以是资源地址，也可以是完成的资源
+ * @param {Scene} scene 场景
+ * */
 function filterSceneSrcTex(scene: Scene): string[] {
   if (scene.textures instanceof Array) {
     return scene.textures.filter(item => typeof item === 'string') as string[];
