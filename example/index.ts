@@ -1,4 +1,4 @@
-import { Pano, CubeScene, SphereScene, HotSpot, SceneAngle } from '../src/index';
+import {Pano, CubeScene, SphereScene, HotSpot, SceneAngle, Scene} from '../src/index';
 
 import b_b from './assets/bedroom/b.jpg';
 import b_d from './assets/bedroom/d.jpg';
@@ -103,7 +103,7 @@ function main() {
     pano.setScene(2);
   }
 
-  const onSceneChange = (scene: CubeScene, index: number) => {
+  const onSceneChange = (scene: Scene, index: number) => {
     document.getElementById('showCurrentScene').innerText = `当前场景：第${index + 1}个场景`;
   };
 
