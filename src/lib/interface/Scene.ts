@@ -6,6 +6,8 @@ export type SceneListenerType = 'angleChange';
 
 export type SceneAngleChangeCallback = (angle: SceneAngle) => void;
 
+export type SceneListenerCallback = SceneAngleChangeCallback;
+
 export type VoidFunction = () => void;
 
 /**
@@ -34,15 +36,15 @@ export default interface Scene {
     /**
      * 添加回调函数
      * @param type {SceneListenerType} 事件类型，预定义好的
-     * @param  callback {SceneAngleChangeCallback} 回调函数
+     * @param  callback {SceneListenerCallback} 回调函数
      * */
-    addListener: (type: SceneListenerType, callback: SceneAngleChangeCallback) => void;
+    addListener: (type: SceneListenerType, callback: SceneListenerCallback) => void;
     /**
      * 移除监听
      * @param type {SceneListenerType} 事件类型，预定义好的
-     * @param  callback {SceneAngleChangeCallback} 回调函数
+     * @param  callback {SceneListenerCallback} 回调函数
      * */
-    removeListener: (type: SceneListenerType, callback: SceneAngleChangeCallback) => void;
+    removeListener: (type: SceneListenerType, callback: SceneListenerCallback) => void;
     /**
      * 渲染模型：在各个子类中重写
      * @param textures {TextureSource[] | TextureSource} 替换后的纹理资源

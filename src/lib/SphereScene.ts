@@ -86,12 +86,12 @@ export default class SphereScene extends BaseScene {
 
   /**
    * @constructor 构造函数
-   * @param {string[]} textures 六个面的纹理图片，按照 f r u l d b 的顺序
+   * @param {string} texture 宽高比2:1的纹理图片
    * @param {SceneAngle} defaultAngle 默认展示角度
    * */
-  constructor(textures: TextureSource, defaultAngle?: SceneAngle) {
+  constructor(texture: TextureSource, defaultAngle?: SceneAngle) {
     super();
-    this.textures = textures;
+    this.textures = texture;
     if (defaultAngle) {
       const { pitch, yaw } = defaultAngle;
       if (pitch) this.pitch = pitch;
@@ -126,8 +126,8 @@ export default class SphereScene extends BaseScene {
     return typeof this.textures === 'string' ? getSingleTexImageSource(this.textures) : Promise.resolve(this.textures);
   }
 
-  replaceTextures(textures: TextureSource) {
-    this.textures = textures;
+  replaceTextures(texture: TextureSource) {
+    this.textures = texture;
     this.render(this.pano);
   }
 
