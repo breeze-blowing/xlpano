@@ -102,7 +102,7 @@ export default class BaseScene implements Scene {
     const mvpMatrix = new Matrix4();
     mvpMatrix.setPerspective(this.fovy, width / height, 0.01, 10.0);
     mvpMatrix.lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
-    mvpMatrix.rotate(this.pitch, 1, 0, 0);
+    mvpMatrix.rotate(-this.pitch, 1, 0, 0);
     mvpMatrix.rotate(this.yaw, 0, 1, 0);
 
     gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
@@ -187,7 +187,7 @@ export default class BaseScene implements Scene {
    * */
   renderHotSpots(deltaPitch: number = 0, deltaYaw: number = 0) {
     if (this.hotSpots && this.hotSpots.length) {
-      this.hotSpots.forEach(hotSpot => hotSpot.render(deltaPitch, deltaYaw, this.pano, this));
+      this.hotSpots.forEach(hotSpot => hotSpot.render(-deltaPitch, deltaYaw, this.pano, this));
     }
   }
 
@@ -224,7 +224,7 @@ export default class BaseScene implements Scene {
   addHotSpots(hotSpots: HotSpot | HotSpot[]) {
     // 如果添加热点的时候，scene 已经有偏移了，需要修补这个偏移量
     const pitchAngle = (spot: HotSpot) => {
-      spot.pitch += this.pitch;
+      spot.pitch -= this.pitch;
       spot.yaw -= this.yaw;
     }
     if (hotSpots instanceof Array) {
@@ -269,7 +269,7 @@ export default class BaseScene implements Scene {
     } else if (this.pitch >= PitchRange[1] && deltaY >= 0) {
       deltaPitch = 0;
     } else {
-      deltaPitch = PI2Angle(Math.atan(deltaY / (canvas.height / 2)));
+      deltaPitch = -PI2Angle(Math.atan(deltaY / (canvas.height / 2)));
     }
 
     const deltaYaw = PI2Angle(Math.atan(deltaX / (canvas.width / 2)));
@@ -371,7 +371,7 @@ export default class BaseScene implements Scene {
    * @param {HotSpot} hotSpot 目标热点
    * */
   onHotSpotClick(hotSpot: HotSpot) {
-    this.move(-hotSpot.pitch, hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw, {
+    this.move(hotSpot.pitch, hotSpot.yaw > 180 ? -(360 - hotSpot.yaw) : hotSpot.yaw, {
       animation: true,
       callback: () => this.pano.switchScene(hotSpot.target),
     });

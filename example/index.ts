@@ -53,7 +53,7 @@ function main() {
   const pano = new Pano('containerId', true);
 
   // 主卧
-  const bedroomScene = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b], { yaw: 50, pitch: 20 });
+  const bedroomScene = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b], { yaw: 50, pitch: -20 });
   // 主卧热点
   const restroomHotSpot = new HotSpot(createHotSpotDom('卫生间'), { pitch: -10, yaw: 55, target: 1 });
   const toBeautyDom = createHotSpotDom('看精装');
@@ -62,7 +62,7 @@ function main() {
   bedroomScene.addHotSpots([restroomHotSpot, beautySpot]);
 
   // 卫生间
-  const restroomScene = new CubeScene([r_f, r_r, r_u, r_l, r_d, r_b], { yaw: 200, pitch: 30 });
+  const restroomScene = new CubeScene([r_f, r_r, r_u, r_l, r_d, r_b], { yaw: 200, pitch: -30 });
   // 卫生间热点
   const bedroomHotSpot = new HotSpot(createHotSpotDom('主卧'), { pitch: -10, yaw: 10, target: 0 });
   restroomScene.addHotSpots(bedroomHotSpot);
@@ -70,7 +70,7 @@ function main() {
   // 精装主卧
   const beautyScene = new SphereScene(sphereImg, { yaw: 80, pitch: 10 });
   // 精装主卧热点
-  const backHomeSpot = new HotSpot(createHotSpotDom('回简装'), { pitch: 10, yaw: 80, target: 0 });
+  const backHomeSpot = new HotSpot(createHotSpotDom('回简装'), { pitch: -10, yaw: 80, target: 0 });
   beautyScene.addHotSpots(backHomeSpot);
 
   // 全部添加到 pano
