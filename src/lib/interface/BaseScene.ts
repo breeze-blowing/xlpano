@@ -264,9 +264,9 @@ export default class BaseScene implements Scene {
 
     let deltaPitch;
     const PitchRange = this.getPitchRange();
-    if (this.pitch <= PitchRange[0] && deltaY <= 0) {
+    if (this.pitch <= PitchRange[0] && deltaY >= 0) {
       deltaPitch = 0;
-    } else if (this.pitch >= PitchRange[1] && deltaY >= 0) {
+    } else if (this.pitch >= PitchRange[1] && deltaY <= 0) {
       deltaPitch = 0;
     } else {
       deltaPitch = -PI2Angle(Math.atan(deltaY / (canvas.height / 2)));
