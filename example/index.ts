@@ -7,6 +7,13 @@ import b_l from './assets/bedroom/l.jpg';
 import b_r from './assets/bedroom/r.jpg';
 import b_u from './assets/bedroom/u.jpg';
 
+import bt_b from './assets/bedroom_tiny/b.jpg';
+import bt_d from './assets/bedroom_tiny/d.jpg';
+import bt_f from './assets/bedroom_tiny/f.jpg';
+import bt_l from './assets/bedroom_tiny/l.jpg';
+import bt_r from './assets/bedroom_tiny/r.jpg';
+import bt_u from './assets/bedroom_tiny/u.jpg';
+
 import r_b from './assets/restroom/b.jpeg';
 import r_d from './assets/restroom/d.jpeg';
 import r_f from './assets/restroom/f.jpeg';
@@ -53,7 +60,7 @@ function main() {
   const pano = new Pano('containerId', true);
 
   // 主卧
-  const bedroomScene = new CubeScene([b_f, b_r, b_u, b_l, b_d, b_b], { yaw: 50, pitch: -20 });
+  const bedroomScene = new CubeScene([bt_f, bt_r, bt_u, bt_l, bt_d, bt_b], { yaw: 50, pitch: -20 });
   // 主卧热点
   const restroomHotSpot = new HotSpot(createHotSpotDom('卫生间'), { pitch: -10, yaw: 55, target: 1 });
   const toBeautyDom = createHotSpotDom('看精装');
@@ -79,6 +86,22 @@ function main() {
   pano.addScene(beautyScene);
 
   pano.render();
+
+  // 加载卧室高清图并替换
+  const replaceTexture = (sources: string[]) => {
+    function loadImage(src: string): Promise<TexImageSource> {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => resolve(image);
+        image.onerror = error => reject(error);
+        image.src = src;
+      });
+    }
+
+    Promise.all(sources.map(src => loadImage(src))).then(images => bedroomScene.replaceTextures(images));
+  };
+  replaceTexture([b_f, b_r, b_u, b_l, b_d, b_b]);
 
   // 按钮
   document.getElementById('getCurrentScene').onclick = () => {
@@ -163,23 +186,6 @@ function main() {
     beautyScene.removeListener('angleChange', onAngleChange);
     document.getElementById('showCurrentAngle').innerText = '当前角度：';
   };
-
-  const replaceTexture = (sources: string[]) => {
-    function loadImage(src: string): Promise<TexImageSource> {
-      return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.crossOrigin = 'anonymous';
-        image.onload = () => resolve(image);
-        image.onerror = error => reject(error);
-        image.src = src;
-      });
-    }
-
-    Promise.all(sources.map(src => loadImage(src))).then(images => bedroomScene.replaceTextures(images));
-  };
-
-  document.getElementById('replaceTexture').onclick = () => replaceTexture([r_f, r_r, r_u, r_l, r_d, r_b]);
-  document.getElementById('replaceTextureBack').onclick = () => replaceTexture([b_f, b_r, b_u, b_l, b_d, b_b]);
 }
 
 window.onload = main;

@@ -1,12 +1,12 @@
 {
   "name": "xl-pano",
-  "version": "0.4.1",
+  "version": "0.5.1",
   "description": "panorama",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "dev": "webpack serve --open --config config/webpack-dev.js",
-    "build:example": "rm -rf docs && webpack --config config/webpack-example.js",
+    "build:example": "webpack --config config/webpack-example.js",
     "build:umd": "webpack --config config/webpack-prod.js",
     "build:min": "webpack --config config/webpack-prod-min.js",
     "build": "rm -rf dist && node build.js",
