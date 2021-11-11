@@ -2,7 +2,7 @@
   "name": "xl-pano",
   "version": "0.5.4",
   "description": "一个基于 Typescript 的，同时支持立方体和球体场景的轻量开源库。",
-  "keyword": ["panorama", "pano", "全景", "3D"],
+  "keywords": ["panorama", "pano", "全景", "3D"],
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
