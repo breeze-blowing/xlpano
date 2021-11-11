@@ -7,8 +7,9 @@ const exampleConfig = {
     mode: "production",
     entry: "./example/index.ts",
     output: {
-        filename: "bundle.js",
+        filename: "[name].[contenthash].js",
         path: path.join(__dirname, '../docs'),
+        clean: true,
     },
     plugins: [
         new HtmlWebpackPlugin({

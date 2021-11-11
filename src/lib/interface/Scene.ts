@@ -46,11 +46,6 @@ export default interface Scene {
      * */
     removeListener: (type: SceneListenerType, callback: SceneListenerCallback) => void;
     /**
-     * 渲染模型：在各个子类中重写
-     * @param textures {TextureSource[] | TextureSource} 替换后的纹理资源
-     * */
-    replaceTextures: (textures: TextureSource[] | TextureSource) => void;
-    /**
      * 添加热点
      * @param {HotSpot | HotSpot[]} hotSpots 待添加的热点
      * */
